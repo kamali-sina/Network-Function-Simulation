@@ -1,19 +1,21 @@
+CC := g++ -std=c++11 -pthread
+
 all : Network
 
 Network : main.o Network.o Switch.o System.o
-		g++ main.o Network.o Switch.o System.o -o Network
+		$(CC) main.o Network.o Switch.o System.o -o Network
 
 main.o : main.cpp Network.hpp
-	g++ -c main.cpp
+	$(CC) -c main.cpp
 
 Network.o : Network.cpp Network.hpp
-	g++ -c Network.cpp
+	$(CC) -c Network.cpp
 
 Switch.o : Switch.cpp Switch.hpp
-	g++ -c Switch.cpp
+	$(CC) -c Switch.cpp
 
 System.o : System.cpp System.hpp
-	g++ -c System.cpp
+	$(CC) -c System.cpp
 
 clean:
 	rm *.o Network
