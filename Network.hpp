@@ -3,10 +3,16 @@
 
 #include <vector>
 #include <string>
+#include <pthread.h>
 #include <iostream>
 #include <sstream>
 #include "System.hpp"
 #include "Switch.hpp"
+
+#define MAX_NUMBER_OF_THREADS 100
+
+void* switchThread(void* switch_class);
+void* systemThread(void* system_class);
 
 class Network{
     public:
@@ -25,6 +31,8 @@ class Network{
     private:
     std::vector<System> systems_;
     std::vector<Switch> switches_;
+    std::vector<pthread_t> threads;
+    pthread_mutex_t mutex_lock;
 };
 
 
