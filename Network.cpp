@@ -1,4 +1,5 @@
 #include "Network.hpp"
+#include <exception>
 
 using namespace std;
 
@@ -52,24 +53,28 @@ int Network::handleCommand(std::string input){
     vector<string> splitted_command = splitCommand(input);
     if (splitted_command.size() == 0) return 0;
     string command = splitted_command[0];
-    if (command == "MySystem"){
-        if (splitted_command.size() < 2) return 0;
-        return mySystem(splitted_command);
-    } else if (command == "MySwitch"){
-        if (splitted_command.size() < 3) return 0;
-        return mySwitch(splitted_command);
-    } else if (command == "Connect"){
-        if (splitted_command.size() < 4) return 0;
-        return connect(splitted_command);
-    } else if (command == "Send"){
-        // TODO: what is the structure?
-        if (splitted_command.size() < 2) return 0;
-        return send(splitted_command);
-    } else if (command == "Recieve"){
-        // TODO: what is the structure?
-        if (splitted_command.size() < 2) return 0;
-        return recieve(splitted_command);
-    }else{
+    try{
+        if (command == "MySystem"){
+            if (splitted_command.size() < 2) return 0;
+            return mySystem(splitted_command);
+        } else if (command == "MySwitch"){
+            if (splitted_command.size() < 3) return 0;
+            return mySwitch(splitted_command);
+        } else if (command == "Connect"){
+            if (splitted_command.size() < 4) return 0;
+            return connect(splitted_command);
+        } else if (command == "Send"){
+            // TODO: what is the structure?
+            if (splitted_command.size() < 2) return 0;
+            return send(splitted_command);
+        } else if (command == "Recieve"){
+            // TODO: what is the structure?
+            if (splitted_command.size() < 2) return 0;
+            return recieve(splitted_command);
+        }else{
+            return 0;
+        }
+    } catch(exception &error){
         return 0;
     }
     return 1;
