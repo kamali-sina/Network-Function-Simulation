@@ -1,15 +1,20 @@
 #ifndef _NETWORK_HPP
 #define _NETWORK_HPP
 
+#include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+
 #include <vector>
 #include <string>
-#include <pthread.h>
 #include <iostream>
 #include <sstream>
 #include "System.hpp"
 #include "Switch.hpp"
 
 #define MAX_NUMBER_OF_THREADS 100
+#define READ 0
+#define WRITE 1
 
 void* switchThread(void* switch_class);
 void* systemThread(void* system_class);
@@ -30,7 +35,9 @@ class Network{
 
     private:
     std::vector<System> systems_;
+    std::vector<int> systems_command_fd_;
     std::vector<Switch> switches_;
+    std::vector<int> switch_command_fd_;
     std::vector<pthread_t> threads;
     pthread_mutex_t mutex_lock;
 };

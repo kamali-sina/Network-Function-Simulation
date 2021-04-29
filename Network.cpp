@@ -11,8 +11,25 @@ void* switchThread(void* switch_class){
 
 void* systemThread(void* system_class){
     System *this_class = (System*) system_class;
-    cout<<"I am alive and running: "<<this_class->get_number()<<endl;
-    return 0;
+
+    cout << "System " << this_class->get_number() << ": Hello from System!" << endl;
+    
+    int read_fd = this_class->getCommandFd();
+
+    size_t messages_size = 100;
+    char message [messages_size];
+
+    while (true) {
+        int read_bytes = read(read_fd, message, messages_size);
+        if (read_bytes > 0) {
+            cout << "System " << this_class->get_number() << ": Read " << read_bytes << " bytes. The message is: " << message << endl;
+            memset(message, 0, messages_size);
+        }
+    }
+
+    close (read_fd);
+    cout << "System " << this_class->get_number() << ": Shutting down." << endl;
+    pthread_exit(NULL);
 }
 
 Network::Network(){
@@ -90,11 +107,29 @@ int Network::mySwitch(std::vector<std::string> &splitted_command){
 }
 
 int Network::mySystem(std::vector<std::string> &splitted_command){
-    // TODO: Establish some sort of pipe when needed
+    int fds[2];
+    if (pipe(fds) < 0) {
+        cout << "Network: Failed to create pipe." << endl;
+    }
+
+    int read_fd = fds[READ];
+    int write_fd = fds[WRITE];
+
+    systems_.push_back(System(stoi(splitted_command[1]), read_fd));
+    this->systems_command_fd_.push_back(write_fd);
+    
     pthread_t new_thread;
-    systems_.push_back(System(stoi(splitted_command[1])));
     pthread_create(&new_thread, NULL, systemThread, (void*)&systems_[systems_.size() - 1]);
     threads.push_back(new_thread);
+
+    string message = "Hello from Network!";
+
+    if (write(write_fd, message.c_str(), strlen(message.c_str()) + 1) < 0) {
+       cout << "Network: Faile to write to system " << systems_[systems_.size() - 1].get_number() << " command file descriptor." << endl;
+    }
+    
+    // close(write_fd);
+
     return 1;
 }
 
