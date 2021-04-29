@@ -33,14 +33,14 @@ void* systemThread(void* system_class){
     
     int read_fd = this_class->getCommandFd();
 
-    size_t messages_size = 100;
-    char message [messages_size];
+    size_t message_size = 100;
+    char message [message_size];
 
     while (true) {
-        int read_bytes = read(read_fd, message, messages_size);
+        int read_bytes = read(read_fd, message, message_size);
         if (read_bytes > 0) {
             cout << "System " << this_class->get_number() << ": Read " << read_bytes << " bytes. The message is: " << message << endl;
-            memset(message, 0, messages_size);
+            memset(message, 0, message_size);
         }
     }
 
@@ -162,7 +162,7 @@ int Network::mySystem(std::vector<std::string> &splitted_command){
     if (write(write_fd, message.c_str(), strlen(message.c_str()) + 1) < 0) {
        cout << "Network: Faile to write to system " << systems_[systems_.size() - 1].get_number() << " command file descriptor." << endl;
     }
-    
+
     // close(write_fd);
 
     return 1;
