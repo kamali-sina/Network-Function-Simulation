@@ -31,4 +31,12 @@
 *.out
 *.app
 Network
+
+# Apple Desktop Services Store
+.DS_Store
+
+# Microsoft Design Gallery Format
+*.mpf
+
+# VS Code Configurations
 .vscode
