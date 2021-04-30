@@ -11,6 +11,7 @@
 #include <sstream>
 #include "System.hpp"
 #include "Switch.hpp"
+#include "Frame.hpp"
 
 #define MAX_NUMBER_OF_THREADS 100
 #define READ 0
