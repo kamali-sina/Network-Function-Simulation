@@ -40,6 +40,18 @@ void* systemThread(void* system_class){
         int read_bytes = read(read_fd, message, message_size);
         if (read_bytes > 0) {
             cout << "System " << this_class->get_number() << ": Read " << read_bytes << " bytes. The message is: " << message << endl;
+
+            int fst_index = string(message).find('#');
+            string command = string(message).substr(0, fst_index) ;
+            if (string(command).compare("connect") == 0) {
+                cout << "System " << this_class->get_number() << ": Connecting ..." << endl;
+
+                int sec_index = string(message).find('#', fst_index + 1);
+
+                int switch_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
+                int port_number = stoi(string(message).substr(sec_index + 1));
+                this_class->connect(switch_number, port_number);
+            }
             memset(message, 0, message_size);
         }
     }
