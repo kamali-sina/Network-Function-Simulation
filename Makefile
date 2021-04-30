@@ -2,8 +2,8 @@ CC := g++ -std=c++11 -pthread
 
 all : Network
 
-Network : main.o Network.o Switch.o System.o
-		$(CC) main.o Network.o Switch.o System.o -o Network
+Network : main.o Network.o Switch.o System.o Frame.o
+		$(CC) main.o Network.o Switch.o System.o Frame.o -o Network
 
 main.o : main.cpp Network.hpp
 	$(CC) -c main.cpp
@@ -16,6 +16,9 @@ Switch.o : Switch.cpp Switch.hpp
 
 System.o : System.cpp System.hpp
 	$(CC) -c System.cpp
+
+Frame.o : Frame.cpp Frame.hpp
+	$(CC) -c Frame.cpp
 
 clean:
 	rm *.o Network link_*
