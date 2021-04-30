@@ -1,6 +1,13 @@
 #ifndef _SWITCH_HPP
 #define _SWITCH_HPP
 
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <iostream>
 #include <vector>
 
 struct lookup{
