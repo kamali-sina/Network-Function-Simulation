@@ -174,9 +174,44 @@ int Network::connect(std::vector<std::string> &splitted_command){
     int port_number = stoi(splitted_command[3]);
     Switch swtch = switches_[findSwitch(switch_number)];
     System systm = systems_[findSystem(system_number)];
-    swtch.connect(system_number, port_number);
-    systm.connect(switch_number, port_number);
-    // TODO: complete if needed
+    //swtch.connect(system_number, port_number);
+    //systm.connect(switch_number, port_number);
+
+    string link = "link_" + to_string(system_number) + "_" + to_string(switch_number) + "_" + to_string(port_number);
+
+    struct stat stats;
+    if (stat(link.c_str(), &stats) < 0) {
+        if (errno != ENOENT) {
+            std::cout << "Network " << ": Stat failed. Error: " << errno << std::endl;
+        }
+    } else {
+        if (unlink(link.c_str()) < 0) {
+            std::cout << "Network " << ": Unlink failed." << std::endl;
+        }
+    }
+  
+    if (mkfifo(link.c_str(), 0666) < 0) {
+        std::cout << "Network " << ": Failed to create link." << std::endl;
+    }
+
+    string system_message = "connect#" + to_string(switch_number) + "#" + to_string(port_number);
+
+    int system_index = findSystem(system_number);
+    int system_write_fd = this->systems_command_fd_[system_index];
+
+    if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
+       cout << "Network: Faile to write to system " << system_number << " command file descriptor." << endl;
+    }
+
+    string switch_message = "connect#" + to_string(system_number) + "#" + to_string(port_number);
+
+    int switch_index = findSwitch(switch_number);
+    int switch_write_fd = this->switch_command_fd_[switch_index];
+
+    if (write(switch_write_fd, switch_message.c_str(), strlen(switch_message.c_str()) + 1) < 0) {
+       cout << "Network: Faile to write to switch " << switch_number << " command file descriptor." << endl;
+    }
+
     return 1;
 }
 
