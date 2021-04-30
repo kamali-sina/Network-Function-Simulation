@@ -18,4 +18,4 @@ System.o : System.cpp System.hpp
 	$(CC) -c System.cpp
 
 clean:
-	rm *.o Network
+	rm *.o Network link_*
