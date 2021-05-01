@@ -63,11 +63,7 @@ int System::addConnection(int switch_number, int port_number) {
 }
 
 bool System::isConnected() {
-    if (this->used_port_ < 0) {
-        return false;
-    }
-
-    return true;
+    return is_connected;
 }
 
 int System::send(int receiver_system_number) {
