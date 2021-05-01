@@ -20,6 +20,7 @@ class System{
     int getCommandFd();
     int addConnection(int switch_number, int port_number);
     bool isConnected();
+    void setConnected(){is_connected = true;}
     int send(int receiver_system_number);
 
     private:
@@ -27,6 +28,7 @@ class System{
     int command_fd_;
     int connected_switch_;
     int used_port_ = -1;
+    bool is_connected=false;
 };
 
 
