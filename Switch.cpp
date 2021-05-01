@@ -90,7 +90,7 @@ int Switch::receive() {
         char message[message_size];
 
         // cout << "Switch " << switch_number_ << ": Trying to opne link to read." << endl;
-        int fd = open(link.c_str(), O_RDONLY);
+        int fd = open(link.c_str(), O_RDONLY | O_NONBLOCK);
 
         int read_bytes = read(fd, message, message_size);
         if (read_bytes > 0) {
