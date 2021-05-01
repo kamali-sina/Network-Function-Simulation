@@ -92,9 +92,9 @@ int System::send(int receiver_system_number) {
         } else {
             break;
         }
-
-        close(fd);
     }
+
+    close(fd);
 
     return 1;
 }
