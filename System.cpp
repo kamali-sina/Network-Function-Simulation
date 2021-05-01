@@ -69,3 +69,32 @@ bool System::isConnected() {
 
     return true;
 }
+
+int System::send(int receiver_system_number) {
+    int switch_number = this->connected_siwtch_;
+    int port_number = this->used_port_;
+    string link = "link_" + to_string(system_number_) + "_" + to_string(switch_number) + "_" + to_string(port_number);
+
+    string message = "Sending a Hello from System " + to_string(system_number_) + " to " + to_string(receiver_system_number) + ".";
+    Frame frame(this->system_number_, receiver_system_number, message);
+    
+    string frame_string = frame.getFrameString();
+
+    cout << "System " << system_number_ << ": Frame: " << frame_string << endl;
+
+    cout << "System " << system_number_ << ": Trying to opne link to write." << endl;
+    int fd = open(link.c_str(), O_WRONLY);
+
+    while (true) {
+        int write_bytes = write(fd, frame_string.c_str(), strlen(frame_string.c_str()) + 1);
+        if (write_bytes < 1) {
+            cout << "System " << system_number_ << ": Couldn't write a message to Switch " << switch_number << "." << endl;
+        } else {
+            break;
+        }
+
+        close(fd);
+    }
+
+    return 1;
+}

@@ -74,3 +74,30 @@ int Switch::updateLookupTable(int system_number, int port_number) {
 
     return 1;
 }
+
+int Switch::receive() {
+    for (int system_index = 0; system_index < this->lookup_table_.size(); system_index++) {
+        int system_number = this->lookup_table_[system_index].system_number;
+        int port_number = this->lookup_table_[system_index].port_number;
+
+        string link = "link_" + to_string(system_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
+
+        cout << "Switch " << switch_number_ << ": " << link << endl;
+        
+        size_t message_size = 128;
+        char message[message_size];
+
+        cout << "Switch " << switch_number_ << ": Trying to opne link to read." << endl;
+        int fd = open(link.c_str(), O_RDONLY);
+
+        int read_bytes = read(fd, message, message_size);
+        if (read_bytes > 1) {
+            cout << "Switch " << switch_number_ << ": Message from System " << system_number << ": " << message << endl;
+            memset(message, 0, message_size);
+        }
+        
+        close(fd);
+    }
+
+    return 1;
+}
