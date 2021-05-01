@@ -8,6 +8,7 @@
 #include <sys/types.h>
 
 #include <iostream>
+#include <vector>
 
 class System{
     public:
@@ -15,10 +16,13 @@ class System{
     int connect(int switch_number, int port_number);
     int get_number(){return system_number_;}
     int getCommandFd();
+    int add_connection(int switch_number, int port_number);
 
     private:
     unsigned int system_number_;
     int command_fd_;
+    int connected_siwtch_;
+    int used_port_;
 };
 
 

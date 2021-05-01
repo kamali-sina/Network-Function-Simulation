@@ -46,9 +46,18 @@ int System::connect(int switch_number, int port_number){
         close(fd);
     }
 
+    this->add_connection(switch_number, port_number);
+
     return 1;
 }
 
 int System::getCommandFd() {
     return command_fd_;
+}
+
+int System::add_connection(int switch_number, int port_number) {
+    this->connected_siwtch_ = switch_number;
+    this->used_port_ = port_number;
+
+    return 1;
 }
