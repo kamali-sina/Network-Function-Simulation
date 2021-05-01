@@ -2,8 +2,6 @@
 #define _NETWORK_HPP
 
 #include <string.h>
-#include <unistd.h>
-#include <pthread.h>
 
 #include <vector>
 #include <string>
@@ -12,6 +10,11 @@
 #include "System.hpp"
 #include "Switch.hpp"
 #include "Frame.hpp"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h> 
 
 #define MAX_NUMBER_OF_THREADS 100
 #define READ 0
@@ -39,8 +42,6 @@ class Network{
     std::vector<int> systems_command_fd_;
     std::vector<Switch> switches_;
     std::vector<int> switch_command_fd_;
-    std::vector<pthread_t> threads;
-    pthread_mutex_t mutex_lock;
 };
 
 
