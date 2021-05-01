@@ -25,7 +25,7 @@ class System{
     private:
     unsigned int system_number_;
     int command_fd_;
-    int connected_siwtch_;
+    int connected_switch_;
     int used_port_ = -1;
 };
 

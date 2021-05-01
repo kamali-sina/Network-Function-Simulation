@@ -56,7 +56,7 @@ int System::getCommandFd() {
 }
 
 int System::addConnection(int switch_number, int port_number) {
-    this->connected_siwtch_ = switch_number;
+    this->connected_switch_ = switch_number;
     this->used_port_ = port_number;
 
     return 1;
@@ -71,7 +71,7 @@ bool System::isConnected() {
 }
 
 int System::send(int receiver_system_number) {
-    int switch_number = this->connected_siwtch_;
+    int switch_number = this->connected_switch_;
     int port_number = this->used_port_;
     string link = "link_" + to_string(system_number_) + "_" + to_string(switch_number) + "_" + to_string(port_number);
 

@@ -197,7 +197,7 @@ int Network::mySystem(std::vector<std::string> &splitted_command){
     string message = "Hello from Network!";
 
     if (write(write_fd, message.c_str(), strlen(message.c_str()) + 1) < 0) {
-       cout << "Network: Faile to write to system " << systems_[systems_.size() - 1].get_number() << " command file descriptor." << endl;
+       cout << "Network: Failed to write to system " << systems_[systems_.size() - 1].get_number() << " command file descriptor." << endl;
     }
 
     // close(write_fd);
@@ -237,7 +237,7 @@ int Network::connect(std::vector<std::string> &splitted_command){
     int system_write_fd = this->systems_command_fd_[system_index];
 
     if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
-       cout << "Network: Faile to write to system " << system_number << " command file descriptor." << endl;
+       cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
     }
 
     string switch_message = "connect#" + to_string(system_number) + "#" + to_string(port_number);
@@ -246,7 +246,7 @@ int Network::connect(std::vector<std::string> &splitted_command){
     int switch_write_fd = this->switch_command_fd_[switch_index];
 
     if (write(switch_write_fd, switch_message.c_str(), strlen(switch_message.c_str()) + 1) < 0) {
-       cout << "Network: Faile to write to switch " << switch_number << " command file descriptor." << endl;
+       cout << "Network: Failed to write to switch " << switch_number << " command file descriptor." << endl;
     }
 
     return 1;
@@ -274,7 +274,7 @@ int Network::send(std::vector<std::string> &splitted_command){
         int system_write_fd = this->systems_command_fd_[system_index];
 
         if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
-            cout << "Network: Faile to write to system " << system_number << " command file descriptor." << endl;
+            cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
             return 0;
         }
 
