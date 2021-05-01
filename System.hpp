@@ -16,7 +16,7 @@ class System{
     int connect(int switch_number, int port_number);
     int get_number(){return system_number_;}
     int getCommandFd();
-    int add_connection(int switch_number, int port_number);
+    int addConnection(int switch_number, int port_number);
 
     private:
     unsigned int system_number_;
