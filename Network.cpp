@@ -10,6 +10,9 @@ void* switchThread(void* switch_class){
     
     int read_fd = this_class->getCommandFd();
 
+    int flags = fcntl(read_fd, F_GETFL, 0);
+    fcntl(read_fd, F_SETFL, flags | O_NONBLOCK);
+
     size_t message_size = 100;
     char message[message_size];
 
@@ -30,6 +33,8 @@ void* switchThread(void* switch_class){
                 this_class->connect(system_number, port_number);
             }
             memset(message, 0, message_size); 
+        } else {
+            this_class->receive();
         }
     }
 
