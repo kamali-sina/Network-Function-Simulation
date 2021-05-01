@@ -17,12 +17,13 @@ class System{
     int get_number(){return system_number_;}
     int getCommandFd();
     int addConnection(int switch_number, int port_number);
+    bool isConnected();
 
     private:
     unsigned int system_number_;
     int command_fd_;
     int connected_siwtch_;
-    int used_port_;
+    int used_port_ = -1;
 };
 
 

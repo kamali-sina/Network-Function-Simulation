@@ -61,3 +61,11 @@ int System::addConnection(int switch_number, int port_number) {
 
     return 1;
 }
+
+bool System::isConnected() {
+    if (this->used_port_ < 0) {
+        return false;
+    }
+
+    return true;
+}
