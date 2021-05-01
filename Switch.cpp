@@ -47,10 +47,30 @@ int Switch::connect(int system_number, int port_number){
         close(fd);
     }
 
+    if (this->updateLookupTable(system_number, port_number) < 1) {
+        std::cout << "Switch " << switch_number_ << ": Port number " << port_number << "is already taken." << endl;
+        return 0;
+    }
 
     return 1;
 }
 
 int Switch::getCommandFd() {
     return command_fd_;
+}
+
+int Switch::updateLookupTable(int system_number, int port_number) {
+    for (int system_index = 0; system_index < this->lookup_table_.size(); system_index++) {
+        if (port_number == this->lookup_table_[system_index].port_number) {
+            return 0;
+        }
+    }
+
+    SystemInfo system;
+    system.system_number = system_number;
+    system.port_number = port_number;
+
+    this->lookup_table_.push_back(system);
+
+    return 1;
 }

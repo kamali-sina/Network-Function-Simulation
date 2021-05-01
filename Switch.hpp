@@ -10,7 +10,7 @@
 #include <iostream>
 #include <vector>
 
-struct lookup{
+struct SystemInfo{
     int system_number;
     int port_number;
 };
@@ -21,11 +21,12 @@ class Switch{
     int connect(int system_number, int port_number);
     int get_number(){return switch_number_;}
     int getCommandFd();
+    int updateLookupTable(int system_number, int port_number);
 
     private:
     unsigned int number_of_ports_;
     unsigned int switch_number_;
-    std::vector<lookup> lookup_table_;
+    std::vector<SystemInfo> lookup_table_;
     int command_fd_;
 };
 
