@@ -1,4 +1,5 @@
 #include "Switch.hpp"
+#include <fcntl.h>
 
 using namespace std;
 
@@ -20,7 +21,7 @@ int Switch::connect(int system_number, int port_number){
 
     while (!(read_flag && write_flag))
     {
-        std::cout << "Switch " << switch_number_ << ": Trying to opne link to read." << std::endl;
+        std::cout << "Switch " << switch_number_ << ": Trying to open link to read." << std::endl;
         int fd = open(link.c_str(), O_RDONLY);
   
         int read_bytes = read(fd, message, message_size);
@@ -34,7 +35,7 @@ int Switch::connect(int system_number, int port_number){
         
         close(fd);
 
-        std::cout << "Switch " << switch_number_ << ": Trying to opne link to write." << std::endl;
+        std::cout << "Switch " << switch_number_ << ": Trying to open link to write." << std::endl;
         fd = open(link.c_str(), O_WRONLY);
   
         int write_bytes = write(fd, send_message.c_str(), strlen(send_message.c_str()) + 1);
@@ -46,6 +47,7 @@ int Switch::connect(int system_number, int port_number){
 
         close(fd);
     }
+    cout<<"Switch " << switch_number_ << ": Connect Complete"<<endl;
 
     if (this->updateLookupTable(system_number, port_number) < 1) {
         std::cout << "Switch " << switch_number_ << ": Port number " << port_number << "is already taken." << endl;
@@ -82,16 +84,16 @@ int Switch::receive() {
 
         string link = "link_" + to_string(system_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
 
-        cout << "Switch " << switch_number_ << ": " << link << endl;
+        // cout << "Switch " << switch_number_ << ": " << link << endl;
         
         size_t message_size = 128;
         char message[message_size];
 
-        cout << "Switch " << switch_number_ << ": Trying to opne link to read." << endl;
+        // cout << "Switch " << switch_number_ << ": Trying to opne link to read." << endl;
         int fd = open(link.c_str(), O_RDONLY);
 
         int read_bytes = read(fd, message, message_size);
-        if (read_bytes > 1) {
+        if (read_bytes > 0) {
             cout << "Switch " << switch_number_ << ": Message from System " << system_number << ": " << message << endl;
             memset(message, 0, message_size);
         }
