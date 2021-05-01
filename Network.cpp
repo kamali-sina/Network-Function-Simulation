@@ -64,8 +64,13 @@ void* systemThread(void* system_class){
                 int port_number = stoi(string(message).substr(sec_index + 1));
                 this_class->connect(switch_number, port_number);
             } else if (string(command).compare("send") == 0) {
-                //this_class->send();
                 cout << "System " << this_class->get_number() << ": Sending ..." << endl;
+
+                int sec_index = string(message).find('#', fst_index + 1);
+
+                int receiver_system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
+                this_class->send(receiver_system_number);
+                
             }
             memset(message, 0, message_size);
         }
@@ -244,12 +249,19 @@ int Network::connect(std::vector<std::string> &splitted_command){
 
 int Network::send(std::vector<std::string> &splitted_command){
     int system_number = stoi(splitted_command[1]);
+    int receiver_system_number = stoi(splitted_command[2]);
     
-    string system_message = "send#";
+    string system_message = "send#" + to_string(receiver_system_number) + "#";
 
     int system_index;
     if ((system_index = findSystem(system_number)) < 0) {
         cout << "Network: System " << system_number << " is not available." << endl;
+        return 0;
+    }
+
+    int receiver_system_index;
+    if((receiver_system_index = findSystem(receiver_system_number)) < 0) {
+        cout << "Network: System " << receiver_system_number << " is not available." << endl;
         return 0;
     }
 
