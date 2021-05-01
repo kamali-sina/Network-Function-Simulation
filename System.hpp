@@ -10,6 +10,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Frame.hpp"
+
 class System{
     public:
     System(int system_number, int command_fd);
@@ -18,6 +20,7 @@ class System{
     int getCommandFd();
     int addConnection(int switch_number, int port_number);
     bool isConnected();
+    int send(int receiver_system_number);
 
     private:
     unsigned int system_number_;
