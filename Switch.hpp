@@ -10,6 +10,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Frame.hpp"
+
 struct SystemInfo{
     int system_number;
     int port_number;
@@ -22,6 +24,7 @@ class Switch{
     int get_number(){return switch_number_;}
     int getCommandFd();
     int updateLookupTable(int system_number, int port_number);
+    int receive();
 
     private:
     unsigned int number_of_ports_;
