@@ -1,14 +1,13 @@
 #include "Network.hpp"
 #include <exception>
+#include <unistd.h>
 
 using namespace std;
 
-void* switchThread(void* switch_class){
-    Switch *this_class = (Switch*) switch_class;
-
-    cout << "Switch " << this_class->get_number() << ": Hello from Switch!" << endl;
+void switchProcess(Switch switch_class){
+    cout << "Switch " << switch_class.get_number() << ": Hello from Switch!" << endl;
     
-    int read_fd = this_class->getCommandFd();
+    int read_fd = switch_class.getCommandFd();
 
     int flags = fcntl(read_fd, F_GETFL, 0);
     fcntl(read_fd, F_SETFL, flags | O_NONBLOCK);
@@ -19,36 +18,35 @@ void* switchThread(void* switch_class){
     while (true) {
         int read_bytes = read(read_fd, message, message_size);
         if (read_bytes > 0) {
-            cout << "Switch " << this_class->get_number() << ": Read " << read_bytes << " bytes. The message is: " << message << endl;
+            cout << "Switch " << switch_class.get_number() << ": Read " << read_bytes << " bytes. The message is: " << message << endl;
             
             int fst_index = string(message).find('#');
             string command = string(message).substr(0, fst_index) ;
             if (string(command).compare("connect") == 0) {
-                cout << "System " << this_class->get_number() << ": Connecting ..." << endl;
+                cout << "System " << switch_class.get_number() << ": Connecting ..." << endl;
 
                 int sec_index = string(message).find('#', fst_index + 1);
 
                 int system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
                 int port_number = stoi(string(message).substr(sec_index + 1));
-                this_class->connect(system_number, port_number);
+                switch_class.connect(system_number, port_number);
             }
             memset(message, 0, message_size); 
         } else {
-            this_class->receive();
+            switch_class.receive();
+            usleep(100000);
         }
     }
 
     close(read_fd);
-    cout << "Switch " << this_class->get_number() << ": Shutting down." << endl;
+    cout << "Switch " << switch_class.get_number() << ": Shutting down." << endl;
     pthread_exit(NULL);
 }
 
-void* systemThread(void* system_class){
-    System *this_class = (System*) system_class;
-
-    cout << "System " << this_class->get_number() << ": Hello from System!" << endl;
+void systemProcess(System system_class){
+    cout << "System " << system_class.get_number() << ": Hello from System!" << endl;
     
-    int read_fd = this_class->getCommandFd();
+    int read_fd = system_class.getCommandFd();
 
     size_t message_size = 100;
     char message [message_size];
@@ -56,25 +54,25 @@ void* systemThread(void* system_class){
     while (true) {
         int read_bytes = read(read_fd, message, message_size);
         if (read_bytes > 0) {
-            cout << "System " << this_class->get_number() << ": Read " << read_bytes << " bytes. The message is: " << message << endl;
+            cout << "System " << system_class.get_number() << ": Read " << read_bytes << " bytes. The message is: " << message << endl;
 
             int fst_index = string(message).find('#');
             string command = string(message).substr(0, fst_index) ;
             if (string(command).compare("connect") == 0) {
-                cout << "System " << this_class->get_number() << ": Connecting ..." << endl;
+                cout << "System " << system_class.get_number() << ": Connecting ..." << endl;
 
                 int sec_index = string(message).find('#', fst_index + 1);
 
                 int switch_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
                 int port_number = stoi(string(message).substr(sec_index + 1));
-                this_class->connect(switch_number, port_number);
+                system_class.connect(switch_number, port_number);
             } else if (string(command).compare("send") == 0) {
-                cout << "System " << this_class->get_number() << ": Sending ..." << endl;
+                cout << "System " << system_class.get_number() << ": Sending ..." << endl;
 
                 int sec_index = string(message).find('#', fst_index + 1);
 
                 int receiver_system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
-                this_class->send(receiver_system_number);
+                system_class.send(receiver_system_number);
                 
             }
             memset(message, 0, message_size);
@@ -82,7 +80,7 @@ void* systemThread(void* system_class){
     }
 
     close (read_fd);
-    cout << "System " << this_class->get_number() << ": Shutting down." << endl;
+    cout << "System " << system_class.get_number() << ": Shutting down." << endl;
     pthread_exit(NULL);
 }
 
@@ -122,21 +120,21 @@ int Network::findSystem(int system_number){
 
 int Network::handleCommand(std::string input){
     vector<string> splitted_command = splitCommand(input);
-    if (splitted_command.size() == 0) return 0;
+    if (splitted_command.size() == 0) { cout<< "command size is 0"<<endl; return 0;}
     string command = splitted_command[0];
     try{
         if (command == "MySystem"){
-            if (splitted_command.size() < 2) return 0;
+            if (splitted_command.size() < 2) { cout<< "fuck size"<<endl; return 0;}
             return mySystem(splitted_command);
         } else if (command == "MySwitch"){
-            if (splitted_command.size() < 3) return 0;
+            if (splitted_command.size() < 3) { cout<< "fuck size"<<endl; return 0;}
             return mySwitch(splitted_command);
         } else if (command == "Connect"){
-            if (splitted_command.size() < 4) return 0;
+            if (splitted_command.size() < 4){ cout<< "fuck size"<<endl; return 0;}
             return connect(splitted_command);
         } else if (command == "Send"){
             // TODO: what is the structure?
-            if (splitted_command.size() < 2) return 0;
+            if (splitted_command.size() < 2) { cout<< "fuck size"<<endl; return 0;}
             return send(splitted_command);
         } else if (command == "Recieve"){
             // TODO: what is the structure?
@@ -146,6 +144,7 @@ int Network::handleCommand(std::string input){
             return 0;
         }
     } catch(exception &error){
+        cout<<error.what()<<endl;
         return 0;
     }
     return 1;
@@ -163,9 +162,15 @@ int Network::mySwitch(std::vector<std::string> &splitted_command){
     switches_.push_back(Switch(stoi(splitted_command[1]),stoi(splitted_command[2]), read_fd));
     this->switch_command_fd_.push_back(write_fd);
     
-    pthread_t new_thread;
-    pthread_create(&new_thread, NULL, switchThread, (void*)&switches_[switches_.size() - 1]);
-    threads.push_back(new_thread);
+    int pid = fork();
+    if (pid == -1){
+        cout<<"error: something's wrong, fork failed"<<endl;
+        exit(-1);
+    }else if (pid == 0){
+        usleep(10000);
+        switchProcess(switches_[switches_.size() - 1]);
+        exit(-1);
+    }
 
     string message = "Hello from Network!";
 
@@ -190,9 +195,15 @@ int Network::mySystem(std::vector<std::string> &splitted_command){
     systems_.push_back(System(stoi(splitted_command[1]), read_fd));
     this->systems_command_fd_.push_back(write_fd);
     
-    pthread_t new_thread;
-    pthread_create(&new_thread, NULL, systemThread, (void*)&systems_[systems_.size() - 1]);
-    threads.push_back(new_thread);
+    int pid = fork();
+    if (pid == -1){
+        cout<<"error: something's wrong, fork failed"<<endl;
+        exit(-1);
+    }else if (pid == 0){
+        usleep(10000);
+        systemProcess(systems_[systems_.size() - 1]);
+        exit(-1);
+    }
 
     string message = "Hello from Network!";
 
@@ -209,8 +220,6 @@ int Network::connect(std::vector<std::string> &splitted_command){
     int system_number = stoi(splitted_command[1]);
     int switch_number = stoi(splitted_command[2]);
     int port_number = stoi(splitted_command[3]);
-    Switch swtch = switches_[findSwitch(switch_number)];
-    System systm = systems_[findSystem(system_number)];
     //swtch.connect(system_number, port_number);
     //systm.connect(switch_number, port_number);
 
@@ -226,22 +235,22 @@ int Network::connect(std::vector<std::string> &splitted_command){
             std::cout << "Network " << ": Unlink failed." << std::endl;
         }
     }
-  
+
+
     if (mkfifo(link.c_str(), 0666) < 0) {
         std::cout << "Network " << ": Failed to create link." << std::endl;
     }
-
     string system_message = "connect#" + to_string(switch_number) + "#" + to_string(port_number);
 
     int system_index = findSystem(system_number);
+    systems_[system_index].setConnected();
     int system_write_fd = this->systems_command_fd_[system_index];
-
     if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
        cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
     }
 
-    string switch_message = "connect#" + to_string(system_number) + "#" + to_string(port_number);
 
+    string switch_message = "connect#" + to_string(system_number) + "#" + to_string(port_number);
     int switch_index = findSwitch(switch_number);
     int switch_write_fd = this->switch_command_fd_[switch_index];
 
@@ -295,11 +304,10 @@ int Network::recieve(std::vector<std::string> &splitted_command){
 
 
 int Network::run(){
-    pthread_mutex_init(&mutex_lock, NULL);
     string input;
     while (getline(cin, input)){
         if (handleCommand(input) == 0)
-            cout<<"ERROR: Unknown Command"<<endl;
+            cout<<"ERROR: Bad Command"<<endl;
     }
     return 1;
 }
