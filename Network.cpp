@@ -63,6 +63,9 @@ void* systemThread(void* system_class){
                 int switch_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
                 int port_number = stoi(string(message).substr(sec_index + 1));
                 this_class->connect(switch_number, port_number);
+            } else if (string(command).compare("send") == 0) {
+                //this_class->send();
+                cout << "System " << this_class->get_number() << ": Sending ..." << endl;
             }
             memset(message, 0, message_size);
         }
@@ -240,7 +243,28 @@ int Network::connect(std::vector<std::string> &splitted_command){
 }
 
 int Network::send(std::vector<std::string> &splitted_command){
-    //TODO: No Idea!
+    int system_number = stoi(splitted_command[1]);
+    
+    string system_message = "send#";
+
+    int system_index;
+    if ((system_index = findSystem(system_number)) < 0) {
+        cout << "Network: System " << system_number << " is not available." << endl;
+        return 0;
+    }
+
+    if (this->systems_[system_index].isConnected()) {
+        int system_write_fd = this->systems_command_fd_[system_index];
+
+        if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
+            cout << "Network: Faile to write to system " << system_number << " command file descriptor." << endl;
+            return 0;
+        }
+
+    } else {
+        cout << "Network: System " << system_number << " is not connected." << endl;
+        return 0;
+    }
 
     return 1;
 }
