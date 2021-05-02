@@ -27,6 +27,7 @@ class Switch{
     int receive();
     int addToConnectedTable(int system_number, int index_number);
     int connectSwitch(int switch_number, int port_number);
+    int acceptConnectSwitch(int switch_number, int port_number);
 
     private:
     unsigned int number_of_ports_;
