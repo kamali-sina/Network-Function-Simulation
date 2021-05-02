@@ -19,7 +19,7 @@ int System::connect(int switch_number, int port_number){
 
     while (!(read_flag && write_flag))
     {
-        std::cout << "System " << system_number_ << ": Trying to opne link to write." << std::endl;
+        std::cout << "System " << system_number_ << ": Trying to open link to write." << std::endl;
         int fd = open(link.c_str(), O_WRONLY);
   
         int write_bytes = write(fd, send_message.c_str(), strlen(send_message.c_str()) + 1);
@@ -31,7 +31,7 @@ int System::connect(int switch_number, int port_number){
 
         close(fd);
   
-        std::cout << "System " << system_number_ << ": Trying to opne link to read." << std::endl;
+        std::cout << "System " << system_number_ << ": Trying to open link to read." << std::endl;
         fd = open(link.c_str(), O_RDONLY);
   
         int read_bytes = read(fd, message, message_size);
@@ -78,7 +78,7 @@ int System::send(int receiver_system_number) {
 
     cout << "System " << system_number_ << ": Frame: " << frame_string << endl;
 
-    cout << "System " << system_number_ << ": Trying to opne link to write." << endl;
+    cout << "System " << system_number_ << ": Trying to open link to write." << endl;
     int fd = open(link.c_str(), O_WRONLY);
 
     while (true) {
