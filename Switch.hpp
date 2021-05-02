@@ -25,12 +25,14 @@ class Switch{
     int getCommandFd();
     int updateLookupTable(int system_number, int port_number);
     int receive();
+    int addToConnectedTable(int system_number, int index_number);
 
     private:
     unsigned int number_of_ports_;
     unsigned int switch_number_;
     std::vector<SystemInfo> lookup_table_;
     int command_fd_;
+    std::vector<SystemInfo> connected_table_;
 };
 
 #endif

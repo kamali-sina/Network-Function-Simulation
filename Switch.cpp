@@ -45,14 +45,15 @@ int Switch::connect(int system_number, int port_number){
             write_flag = 1;
         }
 
+        if (this->addToConnectedTable(system_number, port_number) < 1) {
+            std::cout << "Switch " << switch_number_ << ": Port number " << port_number << "is already taken." << endl;
+            return 0;
+        }
+
         close(fd);
     }
+    
     cout<<"Switch " << switch_number_ << ": Connect Complete"<<endl;
-
-    if (this->updateLookupTable(system_number, port_number) < 1) {
-        std::cout << "Switch " << switch_number_ << ": Port number " << port_number << "is already taken." << endl;
-        return 0;
-    }
 
     return 1;
 }
@@ -78,12 +79,14 @@ int Switch::updateLookupTable(int system_number, int port_number) {
 }
 
 int Switch::receive() {
+    cout << "Switch " << switch_number_ << ": Receiving ..." << endl;
+
     fd_set readfds;
     FD_ZERO(&readfds);
 
-    for (int system_index = 0; system_index < this->lookup_table_.size(); system_index++) {
-        int system_number = this->lookup_table_[system_index].system_number;
-        int port_number = this->lookup_table_[system_index].port_number;
+    for (int system_index = 0; system_index < this->connected_table_.size(); system_index++) {
+        int system_number = this->connected_table_[system_index].system_number;
+        int port_number = this->connected_table_[system_index].port_number;
 
         string link = "link_" + to_string(system_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
 
@@ -102,12 +105,37 @@ int Switch::receive() {
             int read_bytes = read(fd, message, message_size);
             if (read_bytes > 0) {
                 cout << "Switch " << switch_number_ << ": Message from System " << system_number << ": " << message << endl;
+
+               // TODO: Add condition check. Like if (frame.getSenderId() == system_number)
+                this->updateLookupTable(system_number, port_number);
+
+                cout << "Switch " << switch_number_ << ": LookUpTable:" << endl;
+                for (int i = 0; i < lookup_table_.size(); i++) {
+                    cout << lookup_table_[i].system_number << "\t" << lookup_table_[i].port_number << endl;
+                }
+
                 memset(message, 0, message_size);
             }
         } else {
             close(fd);
         }
     }
+
+    return 1;
+}
+
+int Switch::addToConnectedTable(int system_number, int index_number) {
+    for (int system_index = 0; system_index < this->connected_table_.size(); system_index++) {
+        if (index_number == this->connected_table_[system_index].port_number) {
+            return 0;
+        }
+    }
+
+    SystemInfo system;
+    system.system_number = system_number;
+    system.port_number = index_number;
+
+    this->connected_table_.push_back(system);
 
     return 1;
 }
