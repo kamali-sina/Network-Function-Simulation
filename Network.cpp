@@ -169,7 +169,7 @@ int Network::handleCommand(std::string input){
             return 0;
         }
     } catch(exception &error){
-        cout<<error.what()<<endl;
+        cout<<"Exception: "<<error.what()<<endl;
         return 0;
     }
     return 1;
