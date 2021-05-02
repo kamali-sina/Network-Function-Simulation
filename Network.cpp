@@ -23,7 +23,7 @@ void switchProcess(Switch switch_class){
             int fst_index = string(message).find('#');
             string command = string(message).substr(0, fst_index) ;
             if (string(command).compare("connect") == 0) {
-                cout << "System " << switch_class.get_number() << ": Connecting ..." << endl;
+                cout << "Switch " << switch_class.get_number() << ": Connecting ..." << endl;
 
                 int sec_index = string(message).find('#', fst_index + 1);
 
