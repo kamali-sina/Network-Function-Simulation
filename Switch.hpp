@@ -12,8 +12,8 @@
 
 #include "Frame.hpp"
 
-struct SystemInfo{
-    int system_number;
+struct DeviceInfo{
+    int device_number;
     int port_number;
 };
 
@@ -32,9 +32,9 @@ class Switch{
     private:
     unsigned int number_of_ports_;
     unsigned int switch_number_;
-    std::vector<SystemInfo> lookup_table_;
+    std::vector<DeviceInfo> lookup_table_;
     int command_fd_;
-    std::vector<SystemInfo> connected_table_;
+    std::vector<DeviceInfo> connected_table_;
 };
 
 #endif

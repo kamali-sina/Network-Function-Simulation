@@ -69,8 +69,8 @@ int Switch::updateLookupTable(int system_number, int port_number) {
         }
     }
 
-    SystemInfo system;
-    system.system_number = system_number;
+    DeviceInfo system;
+    system.device_number = system_number;
     system.port_number = port_number;
 
     this->lookup_table_.push_back(system);
@@ -85,7 +85,7 @@ int Switch::receive() {
     FD_ZERO(&readfds);
 
     for (int system_index = 0; system_index < this->connected_table_.size(); system_index++) {
-        int system_number = this->connected_table_[system_index].system_number;
+        int system_number = this->connected_table_[system_index].device_number;
         int port_number = this->connected_table_[system_index].port_number;
 
         string link = "link_" + to_string(system_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
@@ -111,7 +111,7 @@ int Switch::receive() {
 
                 cout << "Switch " << switch_number_ << ": LookUpTable:" << endl;
                 for (int i = 0; i < lookup_table_.size(); i++) {
-                    cout << lookup_table_[i].system_number << "\t" << lookup_table_[i].port_number << endl;
+                    cout << lookup_table_[i].device_number << "\t" << lookup_table_[i].port_number << endl;
                 }
 
                 memset(message, 0, message_size);
@@ -131,8 +131,8 @@ int Switch::addToConnectedTable(int system_number, int index_number) {
         }
     }
 
-    SystemInfo system;
-    system.system_number = system_number;
+    DeviceInfo system;
+    system.device_number = system_number;
     system.port_number = index_number;
 
     this->connected_table_.push_back(system);
