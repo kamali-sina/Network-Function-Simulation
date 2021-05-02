@@ -33,7 +33,7 @@ class Network{
     int mySystem(std::vector<std::string> &splitted_command);
     int connect(std::vector<std::string> &splitted_command);
     int send(std::vector<std::string> &splitted_command);
-    int recieve(std::vector<std::string> &splitted_command);
+    int receive(std::vector<std::string> &splitted_command);
     int findSwitch(int switch_number);
     int findSystem(int system_number);
     int isSystemAvailable(int system_number);

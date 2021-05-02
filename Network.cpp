@@ -74,6 +74,12 @@ void systemProcess(System system_class){
                 int receiver_system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
                 system_class.send(receiver_system_number);
                 
+            } else if (string(command).compare("receive") == 0) {
+                int sec_index = string(message).find('#', fst_index + 1);
+
+                int receiver_system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
+                
+                cout << "System " << system_class.get_number() << ": Requesting receive from system " << receiver_system_number << "." << endl;
             }
             memset(message, 0, message_size);
         }
@@ -136,10 +142,10 @@ int Network::handleCommand(std::string input){
             // TODO: what is the structure?
             if (splitted_command.size() < 2) { cout<< "fuck size"<<endl; return 0;}
             return send(splitted_command);
-        } else if (command == "Recieve"){
+        } else if (command == "Receive"){
             // TODO: what is the structure?
             if (splitted_command.size() < 2) return 0;
-            return recieve(splitted_command);
+            return receive(splitted_command);
         }else{
             return 0;
         }
@@ -294,8 +300,32 @@ int Network::send(std::vector<std::string> &splitted_command){
     return 1;
 }
 
-int Network::recieve(std::vector<std::string> &splitted_command){
-    //TODO: No Idea!
+int Network::receive(std::vector<std::string> &splitted_command){
+    int system_number = stoi(splitted_command[1]);
+    int sender_system_number = stoi(splitted_command[2]);
+    
+    string system_message = "receive#" + to_string(sender_system_number) + "#";
+
+    int system_index = this->isSystemAvailable(system_number);
+
+    int sender_system_index = this->isSystemAvailable(sender_system_number);
+
+    if ((system_index < 0) || (sender_system_index < 0)) {
+        return 0;
+    }
+
+    if (this->systems_[system_index].isConnected()) {
+        int system_write_fd = this->systems_command_fd_[system_index];
+
+        if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
+            cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
+            return 0;
+        }
+
+    } else {
+        cout << "Network: System " << system_number << " is not connected." << endl;
+        return 0;
+    }
 
     return 1;
 }
