@@ -36,6 +36,7 @@ class Network{
     int recieve(std::vector<std::string> &splitted_command);
     int findSwitch(int switch_number);
     int findSystem(int system_number);
+    int isSystemAvailable(int system_number);
 
     private:
     std::vector<System> systems_;

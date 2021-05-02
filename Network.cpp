@@ -242,7 +242,10 @@ int Network::connect(std::vector<std::string> &splitted_command){
     }
     string system_message = "connect#" + to_string(switch_number) + "#" + to_string(port_number);
 
-    int system_index = findSystem(system_number);
+    int system_index;
+    if ((system_index = this->isSystemAvailable(system_number)) < 0) {
+        return 0;
+    }
     systems_[system_index].setConnected();
     int system_write_fd = this->systems_command_fd_[system_index];
     if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
@@ -267,15 +270,11 @@ int Network::send(std::vector<std::string> &splitted_command){
     
     string system_message = "send#" + to_string(receiver_system_number) + "#";
 
-    int system_index;
-    if ((system_index = findSystem(system_number)) < 0) {
-        cout << "Network: System " << system_number << " is not available." << endl;
-        return 0;
-    }
+    int system_index = this->isSystemAvailable(system_number);
 
-    int receiver_system_index;
-    if((receiver_system_index = findSystem(receiver_system_number)) < 0) {
-        cout << "Network: System " << receiver_system_number << " is not available." << endl;
+    int receiver_system_index = this->isSystemAvailable(receiver_system_number);
+
+    if ((system_index < 0) || (receiver_system_index < 0)) {
         return 0;
     }
 
@@ -310,4 +309,14 @@ int Network::run(){
             cout<<"ERROR: Bad Command"<<endl;
     }
     return 1;
+}
+
+int Network::isSystemAvailable(int system_number) {
+    int system_index; 
+    if ((system_index = findSystem(system_number)) < 0) {
+        cout << "Network: System " << system_number << " is not available." << endl;
+        return -1;
+    }
+
+    return system_index;
 }
