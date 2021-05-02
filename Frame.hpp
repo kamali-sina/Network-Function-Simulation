@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 
 /*
 frame is a 128 character string
@@ -25,16 +26,15 @@ class Frame{
     int getSenderId(){return sender_id_;}
     int getRecieverId_(){return reciever_id_;}
     std::string getMessage(){return message_;}
-    std::string getFrameString(){return frame_string_;}
+    std::vector<std::string> getFrameString(){return frame_strings_;}
 
     private:
     int sender_id_;
     int reciever_id_;
     std::string message_;
-    std::string frame_string_;
     void makeFrameString();
     void extractDataFromFrame();
-    
+    std::vector<std::string> frame_strings_;
 };
 
 
