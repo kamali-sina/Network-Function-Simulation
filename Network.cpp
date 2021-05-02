@@ -33,8 +33,8 @@ void switchProcess(Switch switch_class){
             }
             memset(message, 0, message_size); 
         } else {
+            sleep(10);
             switch_class.receive();
-            usleep(100000);
         }
     }
 
