@@ -30,6 +30,22 @@ void switchProcess(Switch switch_class){
                 int system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
                 int port_number = stoi(string(message).substr(sec_index + 1));
                 switch_class.connect(system_number, port_number);
+            }  else if (string(command).compare("connect_switch") == 0) {
+                int sec_index = string(message).find('#', fst_index + 1);
+                int trd_index = string(message).find('#', sec_index + 1);
+
+                int switch_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
+                int port_number = stoi(string(message).substr(sec_index + 1, trd_index - sec_index - 1));
+
+                string mode = string(message).substr(trd_index + 1);
+
+                cout << "Switch " << switch_class.get_number() << ": Mode: " << mode << endl;
+
+                if (mode.compare("request") == 0) {
+                    switch_class.connectSwitch(switch_number, port_number);
+                } else if (mode.compare("accept") == 0) {
+                    switch_class.acceptConnectSwitch(switch_number, port_number);
+                }
             }
             memset(message, 0, message_size); 
         } else {
