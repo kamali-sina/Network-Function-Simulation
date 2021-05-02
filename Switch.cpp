@@ -84,9 +84,9 @@ int Switch::receive() {
     fd_set readfds;
     FD_ZERO(&readfds);
 
-    for (int system_index = 0; system_index < this->connected_table_.size(); system_index++) {
-        int system_number = this->connected_table_[system_index].device_number;
-        int port_number = this->connected_table_[system_index].port_number;
+    for (int system_index = 0; system_index < this->connected_systems_table_.size(); system_index++) {
+        int system_number = this->connected_systems_table_[system_index].device_number;
+        int port_number = this->connected_systems_table_[system_index].port_number;
 
         string link = "link_" + to_string(system_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
 
@@ -125,8 +125,8 @@ int Switch::receive() {
 }
 
 int Switch::addToConnectedTable(int system_number, int index_number) {
-    for (int system_index = 0; system_index < this->connected_table_.size(); system_index++) {
-        if (index_number == this->connected_table_[system_index].port_number) {
+    for (int system_index = 0; system_index < this->connected_systems_table_.size(); system_index++) {
+        if (index_number == this->connected_systems_table_[system_index].port_number) {
             return 0;
         }
     }
@@ -135,7 +135,7 @@ int Switch::addToConnectedTable(int system_number, int index_number) {
     system.device_number = system_number;
     system.port_number = index_number;
 
-    this->connected_table_.push_back(system);
+    this->connected_systems_table_.push_back(system);
 
     return 1;
 }
@@ -181,7 +181,8 @@ int Switch::connectSwitch(int switch_number, int port_number) {
         
     }
     
-    cout << "Switch " << switch_number_ << ": Connect Complete"<<endl;
+    cout << "Switch " << switch_number_ << ": Connect Complete" << endl;
+    this->addToSwitchesConnectedTable(switch_number, port_number);
 
     return 1;
 }
@@ -226,7 +227,24 @@ int Switch::acceptConnectSwitch(int switch_number, int port_number) {
         close(fd);
     }
     
-    cout<<"Switch " << switch_number_ << ": Connect Complete"<<endl;
+    cout << "Switch " << switch_number_ << ": Connect Complete" << endl;
+    this->addToSwitchesConnectedTable(switch_number, port_number);
+
+    return 1;
+}
+
+int Switch::addToSwitchesConnectedTable(int switch_number, int index_number) {
+    for (int switch_index = 0; switch_index < this->connected_switches_table_.size(); switch_index++) {
+        if (index_number == this->connected_switches_table_[switch_index].port_number) {
+            return 0;
+        }
+    }
+
+    DeviceInfo switch_device;
+    switch_device.device_number = switch_number;
+    switch_device.port_number = index_number;
+
+    this->connected_switches_table_.push_back(switch_device);
 
     return 1;
 }
