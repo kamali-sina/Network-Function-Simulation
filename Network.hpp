@@ -37,6 +37,7 @@ class Network{
     int findSwitch(int switch_number);
     int findSystem(int system_number);
     int isSystemAvailable(int system_number);
+    int connectSwitches(std::vector<std::string> &splitted_command);
 
     private:
     std::vector<System> systems_;
