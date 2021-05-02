@@ -130,23 +130,26 @@ int Network::handleCommand(std::string input){
     string command = splitted_command[0];
     try{
         if (command == "MySystem"){
-            if (splitted_command.size() < 2) { cout<< "fuck size"<<endl; return 0;}
+            if (splitted_command.size() < 2) { cout<< "bad size"<<endl; return 0;}
             return mySystem(splitted_command);
         } else if (command == "MySwitch"){
-            if (splitted_command.size() < 3) { cout<< "fuck size"<<endl; return 0;}
+            if (splitted_command.size() < 3) { cout<< "bad size"<<endl; return 0;}
             return mySwitch(splitted_command);
         } else if (command == "Connect"){
-            if (splitted_command.size() < 4){ cout<< "fuck size"<<endl; return 0;}
+            if (splitted_command.size() < 4){ cout<< "bad size"<<endl; return 0;}
             return connect(splitted_command);
         } else if (command == "Send"){
             // TODO: what is the structure?
-            if (splitted_command.size() < 2) { cout<< "fuck size"<<endl; return 0;}
+            if (splitted_command.size() < 2) { cout<< "bad size"<<endl; return 0;}
             return send(splitted_command);
         } else if (command == "Receive"){
             // TODO: what is the structure?
             if (splitted_command.size() < 2) return 0;
             return receive(splitted_command);
-        }else{
+        } else if (command == "ConnectSwitch") {
+            if (splitted_command.size() < 4){ cout<< "bad size"<<endl; return 0;}
+            return connectSwitches(splitted_command);
+        } else{
             return 0;
         }
     } catch(exception &error){
@@ -349,4 +352,45 @@ int Network::isSystemAvailable(int system_number) {
     }
 
     return system_index;
+}
+
+int Network::connectSwitches(std::vector<std::string> &splitted_command) {
+    int fst_switch_number = stoi(splitted_command[1]);
+    int sec_switch_number = stoi(splitted_command[2]);
+    int port_number = stoi(splitted_command[3]);
+
+    string link = "link_switch_" + to_string(fst_switch_number) + "_" + to_string(sec_switch_number) + "_" + to_string(port_number);
+
+    struct stat stats;
+    if (stat(link.c_str(), &stats) < 0) {
+        if (errno != ENOENT) {
+            std::cout << "Network " << ": Stat failed. Error: " << errno << std::endl;
+        }
+    } else {
+        if (unlink(link.c_str()) < 0) {
+            std::cout << "Network " << ": Unlink failed." << std::endl;
+        }
+    }
+
+    if (mkfifo(link.c_str(), 0666) < 0) {
+        std::cout << "Network " << ": Failed to create link." << std::endl;
+    }
+
+    string fst_switch_message = "connect_switch#" + to_string(sec_switch_number) + "#" + to_string(port_number) + "#request";
+    int fst_switch_index = findSwitch(fst_switch_number);
+    int fst_switch_write_fd = this->switch_command_fd_[fst_switch_index];
+
+    if (write(fst_switch_write_fd, fst_switch_message.c_str(), strlen(fst_switch_message.c_str()) + 1) < 0) {
+       cout << "Network: Failed to write to switch " << fst_switch_number << " command file descriptor." << endl;
+    }
+
+    string sec_switch_message = "connect_switch#" + to_string(fst_switch_number) + "#" + to_string(port_number) + "#accept";
+    int sec_switch_index = findSwitch(sec_switch_number);
+    int sec_switch_write_fd = this->switch_command_fd_[sec_switch_index];
+
+    if (write(sec_switch_write_fd, sec_switch_message.c_str(), strlen(sec_switch_message.c_str()) + 1) < 0) {
+       cout << "Network: Failed to write to switch " << sec_switch_number << " command file descriptor." << endl;
+    }
+
+    return 1;
 }
