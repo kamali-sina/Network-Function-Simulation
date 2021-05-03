@@ -49,8 +49,9 @@ void switchProcess(Switch switch_class){
             }
             memset(message, 0, message_size); 
         } else {
-            sleep(10);
+            sleep(8);
             switch_class.receive();
+            switch_class.receiveSwitch();
         }
     }
 
@@ -63,6 +64,9 @@ void systemProcess(System system_class){
     cout << "System " << system_class.get_number() << ": Hello from System!" << endl;
     
     int read_fd = system_class.getCommandFd();
+
+    int flags = fcntl(read_fd, F_GETFL, 0);
+    fcntl(read_fd, F_SETFL, flags | O_NONBLOCK);
 
     size_t message_size = 100;
     char message [message_size];
@@ -98,6 +102,9 @@ void systemProcess(System system_class){
                 cout << "System " << system_class.get_number() << ": Requesting receive from system " << receiver_system_number << "." << endl;
             }
             memset(message, 0, message_size);
+        } else {
+            sleep(4);
+            system_class.receive();
         }
     }
 
@@ -155,11 +162,9 @@ int Network::handleCommand(std::string input){
             if (splitted_command.size() < 4){ cout<< "bad size"<<endl; return 0;}
             return connect(splitted_command);
         } else if (command == "Send"){
-            // TODO: what is the structure?
             if (splitted_command.size() < 2) { cout<< "bad size"<<endl; return 0;}
             return send(splitted_command);
         } else if (command == "Receive"){
-            // TODO: what is the structure?
             if (splitted_command.size() < 2) return 0;
             return receive(splitted_command);
         } else if (command == "ConnectSwitch") {
@@ -245,26 +250,12 @@ int Network::connect(std::vector<std::string> &splitted_command){
     int system_number = stoi(splitted_command[1]);
     int switch_number = stoi(splitted_command[2]);
     int port_number = stoi(splitted_command[3]);
-    //swtch.connect(system_number, port_number);
-    //systm.connect(switch_number, port_number);
 
     string link = "link_" + to_string(system_number) + "_" + to_string(switch_number) + "_" + to_string(port_number);
 
-    struct stat stats;
-    if (stat(link.c_str(), &stats) < 0) {
-        if (errno != ENOENT) {
-            std::cout << "Network " << ": Stat failed. Error: " << errno << std::endl;
-        }
-    } else {
-        if (unlink(link.c_str()) < 0) {
-            std::cout << "Network " << ": Unlink failed." << std::endl;
-        }
-    }
+    createNamePipe("w_"+link);
+    createNamePipe("r_"+link);
 
-
-    if (mkfifo(link.c_str(), 0666) < 0) {
-        std::cout << "Network " << ": Failed to create link." << std::endl;
-    }
     string system_message = "connect#" + to_string(switch_number) + "#" + to_string(port_number);
 
     int system_index;
@@ -377,20 +368,8 @@ int Network::connectSwitches(std::vector<std::string> &splitted_command) {
 
     string link = "link_switch_" + to_string(fst_switch_number) + "_" + to_string(sec_switch_number) + "_" + to_string(port_number);
 
-    struct stat stats;
-    if (stat(link.c_str(), &stats) < 0) {
-        if (errno != ENOENT) {
-            std::cout << "Network " << ": Stat failed. Error: " << errno << std::endl;
-        }
-    } else {
-        if (unlink(link.c_str()) < 0) {
-            std::cout << "Network " << ": Unlink failed." << std::endl;
-        }
-    }
-
-    if (mkfifo(link.c_str(), 0666) < 0) {
-        std::cout << "Network " << ": Failed to create link." << std::endl;
-    }
+    createNamePipe("w_"+link);
+    createNamePipe("r_"+link);
 
     string fst_switch_message = "connect_switch#" + to_string(sec_switch_number) + "#" + to_string(port_number) + "#request";
     int fst_switch_index = findSwitch(fst_switch_number);
@@ -409,4 +388,26 @@ int Network::connectSwitches(std::vector<std::string> &splitted_command) {
     }
 
     return 1;
+}
+
+int Network::createNamePipe(std::string link) {
+    struct stat stats;
+    if (stat(link.c_str(), &stats) < 0) {
+        if (errno != ENOENT) {
+            std::cout << "Network " << ": Stat failed. Error: " << errno << std::endl;
+            return 0;
+        }
+    } else {
+        if (unlink(link.c_str()) < 0) {
+            std::cout << "Network " << ": Unlink failed." << std::endl;
+            return 0;
+        }
+    }
+
+    if (mkfifo(link.c_str(), 0666) < 0) {
+        std::cout << "Network " << ": Failed to create link." << std::endl;
+        return 1;
+    }
+
+    return 0;
 }

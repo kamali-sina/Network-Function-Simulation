@@ -15,6 +15,7 @@
 struct DeviceInfo{
     int device_number;
     int port_number;
+    bool connector = false;
 };
 
 class Switch{
@@ -28,7 +29,14 @@ class Switch{
     int addToConnectedTable(int system_number, int index_number);
     int connectSwitch(int switch_number, int port_number);
     int acceptConnectSwitch(int switch_number, int port_number);
-    int addToSwitchesConnectedTable(int switch_number, int index_number);
+    int addToSwitchesConnectedTable(int switch_number, int index_number, bool connector);
+    bool isSystemNumberInLookupTable(int system_number);
+    int getPortNumberFromLookupTable(int system_number);
+    int send(Frame frame);
+    int broadcast(Frame frame);
+    int broadcastToSystems(Frame frame);
+    int broadcastToSwitches(Frame frame);
+    int receiveSwitch();
 
     private:
     unsigned int number_of_ports_;

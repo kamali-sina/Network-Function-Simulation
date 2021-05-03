@@ -22,6 +22,7 @@ class System{
     bool isConnected();
     void setConnected(){is_connected = true;}
     int send(int receiver_system_number);
+    int receive();
 
     private:
     unsigned int system_number_;

@@ -12,9 +12,12 @@ Switch::Switch(int number_of_ports, int switch_number, int command_fd){
 int Switch::connect(int system_number, int port_number){
     string link = "link_" + to_string(system_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
 
+    std::string link_r = "r_" + link;
+    std::string link_w = "w_" + link;
+    
     std::string send_message = "Hello from Switch " + to_string(switch_number_) + ".";
     
-    size_t message_size = 100;
+    size_t message_size = 129;
     char message[message_size];
 
     int read_flag, write_flag = 0;
@@ -22,7 +25,7 @@ int Switch::connect(int system_number, int port_number){
     while (!(read_flag && write_flag))
     {
         std::cout << "Switch " << switch_number_ << ": Trying to open link to read." << std::endl;
-        int fd = open(link.c_str(), O_RDONLY);
+        int fd = open(link_w.c_str(), O_RDONLY);
   
         int read_bytes = read(fd, message, message_size);
         if (read_bytes > 1) {
@@ -36,7 +39,7 @@ int Switch::connect(int system_number, int port_number){
         close(fd);
 
         std::cout << "Switch " << switch_number_ << ": Trying to open link to write." << std::endl;
-        fd = open(link.c_str(), O_WRONLY);
+        fd = open(link_r.c_str(), O_WRONLY);
   
         int write_bytes = write(fd, send_message.c_str(), strlen(send_message.c_str()) + 1);
         if (write_bytes < 1) {
@@ -64,7 +67,7 @@ int Switch::getCommandFd() {
 
 int Switch::updateLookupTable(int system_number, int port_number) {
     for (int system_index = 0; system_index < this->lookup_table_.size(); system_index++) {
-        if (port_number == this->lookup_table_[system_index].port_number) {
+        if (system_number == this->lookup_table_[system_index].device_number) {
             return 0;
         }
     }
@@ -90,9 +93,69 @@ int Switch::receive() {
 
         string link = "link_" + to_string(system_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
 
+        std::string link_w = "w_" + link;
+        
         cout << "Switch " << switch_number_ << ": " << link << endl;
         
-        size_t message_size = 128;
+        size_t message_size = 129;
+        char message[message_size];
+
+        cout << "Switch " << switch_number_ << ": Trying to open link to read." << endl;
+        int fd = open(link_w.c_str(), O_RDONLY|O_NONBLOCK);
+
+        FD_SET(fd, &readfds);
+
+        if (FD_ISSET(fd, &readfds)) {
+            
+            int read_bytes = read(fd, message, message_size);
+            if (read_bytes > 0) {
+                cout << "Switch " << switch_number_ << ": Message from System " << system_number << ": " << message << endl;
+
+                Frame frame(message);
+                int receiver_port = this->getPortNumberFromLookupTable(frame.getSenderId());
+
+                if (!(this->isSystemNumberInLookupTable(frame.getSenderId()))) {
+                    this->updateLookupTable(frame.getSenderId(), port_number);
+                }
+
+                if (this->isSystemNumberInLookupTable(frame.getRecieverId_())) {
+                    this->send(frame);
+                } else {
+                    this->broadcast(frame);
+                }
+
+                memset(message, 0, message_size);
+                close(fd);
+            }
+        } else {
+            close(fd);
+        }
+    }
+
+    return 1;
+}
+
+int Switch::receiveSwitch() {
+    cout << "Switch " << switch_number_ << ": SwitchReceiving ..." << endl;
+
+    fd_set readfds;
+    FD_ZERO(&readfds);
+
+    for (int swithc_index = 0; swithc_index < this->connected_switches_table_.size(); swithc_index++) {
+        int switch_number = this->connected_switches_table_[swithc_index].device_number;
+        int port_number = this->connected_switches_table_[swithc_index].port_number;
+
+        std::string link = "";
+        
+        if (this->connected_switches_table_[swithc_index].connector) {
+            link = "r_link_switch_" + to_string(switch_number_) + "_" + to_string(switch_number) + "_" + to_string(port_number);
+        } else {
+            link = "w_link_switch_" + to_string(switch_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
+        }
+        
+        cout << "Switch " << switch_number_ << ": SwitchReceiving:" << link << endl;
+        
+        size_t message_size = 129;
         char message[message_size];
 
         cout << "Switch " << switch_number_ << ": Trying to open link to read." << endl;
@@ -104,17 +167,23 @@ int Switch::receive() {
             
             int read_bytes = read(fd, message, message_size);
             if (read_bytes > 0) {
-                cout << "Switch " << switch_number_ << ": Message from System " << system_number << ": " << message << endl;
+                cout << "Switch " << switch_number_ << ": Message from Switch " << switch_number << ": " << message << endl;
 
-               // TODO: Add condition check. Like if (frame.getSenderId() == system_number)
-                this->updateLookupTable(system_number, port_number);
+                Frame frame(message);
+                int receiver_port = this->getPortNumberFromLookupTable(frame.getSenderId());
 
-                cout << "Switch " << switch_number_ << ": LookUpTable:" << endl;
-                for (int i = 0; i < lookup_table_.size(); i++) {
-                    cout << lookup_table_[i].device_number << "\t" << lookup_table_[i].port_number << endl;
+                if (!(this->isSystemNumberInLookupTable(frame.getSenderId()))) {
+                    this->updateLookupTable(frame.getSenderId(), port_number);
+                }
+
+                if (this->isSystemNumberInLookupTable(frame.getRecieverId_())) {
+                    this->send(frame);
+                } else {
+                    this->broadcast(frame);
                 }
 
                 memset(message, 0, message_size);
+                close(fd);
             }
         } else {
             close(fd);
@@ -145,16 +214,19 @@ int Switch::connectSwitch(int switch_number, int port_number) {
 
     string link = "link_switch_" + to_string(switch_number_) + "_" + to_string(switch_number) + "_" + to_string(port_number);
 
+    std::string link_r = "r_" + link;
+    std::string link_w = "w_" + link;
+    
     std::string send_message = "Hello from Switch " + to_string(switch_number_) + ".";
     
-    size_t message_size = 100;
+    size_t message_size = 129;
     char message[message_size];
 
     int read_flag, write_flag = 0;
 
     while (!(read_flag && write_flag)) {
         std::cout << "Switch " << switch_number_ << ": Trying to open link to write." << std::endl;
-        int fd = open(link.c_str(), O_WRONLY);
+        int fd = open(link_w.c_str(), O_WRONLY);
   
         int write_bytes = write(fd, send_message.c_str(), strlen(send_message.c_str()) + 1);
         if (write_bytes < 1) {
@@ -166,7 +238,7 @@ int Switch::connectSwitch(int switch_number, int port_number) {
         close(fd);
 
         std::cout << "Switch " << switch_number_ << ": Trying to open link to read." << std::endl;
-        fd = open(link.c_str(), O_RDONLY);
+        fd = open(link_r.c_str(), O_RDONLY);
   
         int read_bytes = read(fd, message, message_size);
         if (read_bytes > 1) {
@@ -182,7 +254,7 @@ int Switch::connectSwitch(int switch_number, int port_number) {
     }
     
     cout << "Switch " << switch_number_ << ": Connect Complete" << endl;
-    this->addToSwitchesConnectedTable(switch_number, port_number);
+    this->addToSwitchesConnectedTable(switch_number, port_number, true);
 
     return 1;
 }
@@ -192,16 +264,19 @@ int Switch::acceptConnectSwitch(int switch_number, int port_number) {
 
     string link = "link_switch_" + to_string(switch_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
 
+    std::string link_r = "r_" + link;
+    std::string link_w = "w_" + link;
+    
     std::string send_message = "Hello from Switch " + to_string(switch_number_) + ".";
     
-    size_t message_size = 100;
+    size_t message_size = 129;
     char message[message_size];
 
     int read_flag, write_flag = 0;
 
     while (!(read_flag && write_flag)) {
         std::cout << "Switch " << switch_number_ << ": Trying to open link to read." << std::endl;
-        int fd = open(link.c_str(), O_RDONLY);
+        int fd = open(link_w.c_str(), O_RDONLY);
   
         int read_bytes = read(fd, message, message_size);
         if (read_bytes > 1) {
@@ -215,7 +290,7 @@ int Switch::acceptConnectSwitch(int switch_number, int port_number) {
         close(fd);
 
         std::cout << "Switch " << switch_number_ << ": Trying to open link to write." << std::endl;
-        fd = open(link.c_str(), O_WRONLY);
+        fd = open(link_r.c_str(), O_WRONLY);
   
         int write_bytes = write(fd, send_message.c_str(), strlen(send_message.c_str()) + 1);
         if (write_bytes < 1) {
@@ -228,12 +303,12 @@ int Switch::acceptConnectSwitch(int switch_number, int port_number) {
     }
     
     cout << "Switch " << switch_number_ << ": Connect Complete" << endl;
-    this->addToSwitchesConnectedTable(switch_number, port_number);
+    this->addToSwitchesConnectedTable(switch_number, port_number, false);
 
     return 1;
 }
 
-int Switch::addToSwitchesConnectedTable(int switch_number, int index_number) {
+int Switch::addToSwitchesConnectedTable(int switch_number, int index_number, bool connector) {
     for (int switch_index = 0; switch_index < this->connected_switches_table_.size(); switch_index++) {
         if (index_number == this->connected_switches_table_[switch_index].port_number) {
             return 0;
@@ -243,8 +318,149 @@ int Switch::addToSwitchesConnectedTable(int switch_number, int index_number) {
     DeviceInfo switch_device;
     switch_device.device_number = switch_number;
     switch_device.port_number = index_number;
+    switch_device.connector = connector;
 
     this->connected_switches_table_.push_back(switch_device);
+
+    return 1;
+}
+
+bool Switch::isSystemNumberInLookupTable(int system_number) {
+    for (int i = 0; i < this->lookup_table_.size(); i++) {
+        if (this->lookup_table_[i].device_number == system_number) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+int Switch::getPortNumberFromLookupTable(int system_number) {
+    for (int i = 0; i < this->lookup_table_.size(); i++) {
+        if (this->lookup_table_[i].device_number == system_number) {
+            return this->lookup_table_[i].port_number;
+        }
+    }
+    
+    return -1;
+}
+
+int Switch::send(Frame frame) {
+    string link = "r_link_";
+    
+    int receiver_port_number = this->getPortNumberFromLookupTable(frame.getRecieverId_());
+    link += to_string(frame.getRecieverId_()) + "_" + to_string(switch_number_) + "_" + to_string(receiver_port_number);
+
+    vector<string> frame_string = frame.getFrameString();
+
+    for (int f = 0; f < frame_string.size(); f++) {
+        cout << "Switch " << switch_number_ << ": Frame-send: " << frame_string[f] << endl;
+
+        cout << "Switch " << switch_number_ << ": Trying to open link " << link << " to write." << endl;
+
+        int fd = open(link.c_str(), O_WRONLY);
+
+        while (true) {
+            int write_bytes = write(fd, frame_string[f].c_str(), strlen(frame_string[f].c_str()) + 1);
+            if (write_bytes < 1) {
+                cout << "Switch " << switch_number_ << ": Couldn't write a message to System." << endl;
+                sleep(5);
+            } else {
+                cout << "Switch " << switch_number_ << ": write a message to System." << endl;
+                close(fd);
+                break;
+            }
+        }
+    }
+
+    return 1;
+    
+}
+
+int Switch::broadcast(Frame frame) {
+    this->broadcastToSystems(frame);
+    this->broadcastToSwitches(frame);
+    return 1;
+}
+
+int Switch::broadcastToSystems(Frame frame) {
+    string link = "";
+
+    for (int i = 0; i < this->connected_systems_table_.size(); i++) {
+        if (frame.getSenderId() == connected_systems_table_[i].device_number) {
+            continue;
+        }
+
+        link = "r_link_" + to_string(this->connected_systems_table_[i].device_number) + "_" + to_string(switch_number_) + "_" + to_string(this->connected_systems_table_[i].port_number);
+
+        vector<string> frame_string = frame.getFrameString();
+
+        for (int f = 0; f < frame_string.size(); f++) {
+            cout << "Switch " << switch_number_ << ": Frame-send: " << frame_string[f] << endl;
+
+            cout << "Switch " << switch_number_ << ": Trying to open link " << link << " to write." << endl;
+
+            int fd = open(link.c_str(), O_WRONLY);
+
+            while (true) {
+                int write_bytes = write(fd, frame_string[f].c_str(), strlen(frame_string[f].c_str()) + 1);
+                if (write_bytes < 1) {
+                    cout << "Switch " << switch_number_ << ": Couldn't write a message to System." << endl;
+                    sleep(5);
+                } else {
+                    cout << "Switch " << switch_number_ << ": write a message to System." << endl;
+                    close(fd);
+                    break;
+                }
+            }
+        }
+        
+    }
+
+    return 1;
+}
+
+int Switch::broadcastToSwitches(Frame frame) {
+    for (int i = 0; i < this->connected_switches_table_.size(); i++) {
+        if (frame.getSenderId() == connected_switches_table_[i].device_number) {
+            continue;
+        }
+
+        if (this->getPortNumberFromLookupTable(frame.getSenderId()) == this->connected_switches_table_[i].port_number) {
+            continue;
+        }
+
+        std::string link = "";
+        
+        if (this->connected_switches_table_[i].connector) {
+            link = "w_link_switch_" + to_string(switch_number_) + "_" + to_string(connected_switches_table_[i].device_number) + "_" + to_string(this->connected_switches_table_[i].port_number);
+        } else {
+            link = "r_link_switch_" + to_string(connected_switches_table_[i].device_number) + "_" + to_string(switch_number_) + "_" + to_string(this->connected_switches_table_[i].port_number);
+        }
+
+        vector<string> frame_string = frame.getFrameString();
+
+        for (int f = 0; f < frame_string.size(); f++) {
+            cout << "Switch " << switch_number_ << ": Frame-send: " << frame_string[f] << endl;
+
+            cout << "Switch " << switch_number_ << ": Trying to open link " << link << " to write." << endl;
+
+            int fd = open(link.c_str(), O_WRONLY);
+
+            while (true) {
+                int write_bytes = write(fd, frame_string[f].c_str(), strlen(frame_string[f].c_str()) + 1);
+                if (write_bytes < 1) {
+                    cout << "Switch " << switch_number_ << ": Couldn't write a message to Switch." << endl;
+                    sleep(5);
+                } else {
+                    cout << "Switch " << switch_number_ << ": write a message to Switch." << endl;
+                    close(fd);
+                    break;
+                }
+            }
+        }
+        
+    }
 
     return 1;
 }

@@ -21,4 +21,4 @@ Frame.o : Frame.cpp Frame.hpp
 	$(CC) -c Frame.cpp
 
 clean:
-	rm *.o Network link_*
+	rm *.o Network r_link_* w_link_*

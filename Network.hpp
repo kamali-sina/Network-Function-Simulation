@@ -38,6 +38,7 @@ class Network{
     int findSystem(int system_number);
     int isSystemAvailable(int system_number);
     int connectSwitches(std::vector<std::string> &splitted_command);
+    int createNamePipe(std::string link_name);
 
     private:
     std::vector<System> systems_;
