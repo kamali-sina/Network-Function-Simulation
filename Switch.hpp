@@ -37,6 +37,7 @@ class Switch{
     int broadcastToSystems(Frame frame);
     int broadcastToSwitches(Frame frame);
     int receiveSwitch();
+    int unlinkSwitch(int switch_number);
 
     private:
     unsigned int number_of_ports_;
