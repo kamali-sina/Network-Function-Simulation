@@ -82,7 +82,7 @@ int Switch::updateLookupTable(int system_number, int port_number) {
 }
 
 int Switch::receive() {
-    cout << "Switch " << switch_number_ << ": Receiving ..." << endl;
+    // cout << "Switch " << switch_number_ << ": Receiving ..." << endl;
 
     fd_set readfds;
     FD_ZERO(&readfds);
@@ -95,12 +95,12 @@ int Switch::receive() {
 
         std::string link_w = "w_" + link;
         
-        cout << "Switch " << switch_number_ << ": " << link << endl;
+        // cout << "Switch " << switch_number_ << ": " << link << endl;
         
         size_t message_size = 129;
         char message[message_size];
 
-        cout << "Switch " << switch_number_ << ": Trying to open link to read." << endl;
+        // cout << "Switch " << switch_number_ << ": Trying to open link to read." << endl;
         int fd = open(link_w.c_str(), O_RDONLY|O_NONBLOCK);
 
         FD_SET(fd, &readfds);
@@ -136,7 +136,7 @@ int Switch::receive() {
 }
 
 int Switch::receiveSwitch() {
-    cout << "Switch " << switch_number_ << ": SwitchReceiving ..." << endl;
+    // cout << "Switch " << switch_number_ << ": SwitchReceiving ..." << endl;
 
     fd_set readfds;
     FD_ZERO(&readfds);
@@ -153,12 +153,12 @@ int Switch::receiveSwitch() {
             link = "w_link_switch_" + to_string(switch_number) + "_" + to_string(switch_number_) + "_" + to_string(port_number);
         }
         
-        cout << "Switch " << switch_number_ << ": SwitchReceiving:" << link << endl;
+        // cout << "Switch " << switch_number_ << ": SwitchReceiving:" << link << endl;
         
         size_t message_size = 129;
         char message[message_size];
 
-        cout << "Switch " << switch_number_ << ": Trying to open link to read." << endl;
+        // cout << "Switch " << switch_number_ << ": Trying to open link to read." << endl;
         int fd = open(link.c_str(), O_RDONLY|O_NONBLOCK);
 
         FD_SET(fd, &readfds);
@@ -308,9 +308,22 @@ int Switch::acceptConnectSwitch(int switch_number, int port_number) {
     return 1;
 }
 
+int Switch::unlinkSwitch(int switch_number){
+    for (int switch_index = 0; switch_index < this->connected_switches_table_.size(); switch_index++) {
+        if (switch_number == this->connected_switches_table_[switch_index].device_number){
+            this->connected_switches_table_.erase(this->connected_switches_table_.begin() + switch_index);
+            cout<<"Switch " << switch_number_ << ": Successfully unlinked from switch "<<switch_number<<endl;
+            return 1;
+        }
+    }
+    cout<<"Error: trying to unlink from switch that is not connected!"<<endl;
+    return 0;
+}
+
 int Switch::addToSwitchesConnectedTable(int switch_number, int index_number, bool connector) {
     for (int switch_index = 0; switch_index < this->connected_switches_table_.size(); switch_index++) {
         if (index_number == this->connected_switches_table_[switch_index].port_number) {
+            cout<<"ERROR: Port was occupied!"<<endl;
             return 0;
         }
     }
