@@ -30,7 +30,7 @@ void switchProcess(Switch switch_class){
                 int system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
                 int port_number = stoi(string(message).substr(sec_index + 1));
                 switch_class.connect(system_number, port_number);
-            }  else if (string(command).compare("connect_switch") == 0) {
+            } else if (string(command).compare("connect_switch") == 0) {
                 int sec_index = string(message).find('#', fst_index + 1);
                 int trd_index = string(message).find('#', sec_index + 1);
 
@@ -46,6 +46,9 @@ void switchProcess(Switch switch_class){
                 } else if (mode.compare("accept") == 0) {
                     switch_class.acceptConnectSwitch(switch_number, port_number);
                 }
+            } else if (string(command).compare("unlink_switch") == 0){
+                int switch_to_unlink = stoi(string(message).substr(fst_index + 1));
+                switch_class.unlinkSwitch(switch_to_unlink);
             }
             memset(message, 0, message_size); 
         } else {
@@ -170,7 +173,10 @@ int Network::handleCommand(std::string input){
         } else if (command == "ConnectSwitch") {
             if (splitted_command.size() < 4){ cout<< "bad size"<<endl; return 0;}
             return connectSwitches(splitted_command);
-        } else{
+        } else if (command == "SpanningTree") {
+            if (splitted_command.size() < 1){ cout<< "bad size"<<endl; return 0;}
+            return SpanningTree(splitted_command);
+        } else {
             return 0;
         }
     } catch(exception &error){
@@ -340,7 +346,88 @@ int Network::receive(std::vector<std::string> &splitted_command){
     return 1;
 }
 
+bool Network::checkAddVisited(vector<vector<int>> &tree_holder, switch_link swtch_link){
+    int path1 = findPathIndex(tree_holder, swtch_link.switch1);
+    int path2 = findPathIndex(tree_holder, swtch_link.switch2);
+    if (path1 == -1 && path2 == -1){
+        vector<int> temp{swtch_link.switch1, swtch_link.switch2};
+        tree_holder.push_back(temp);
+    }else if (path1 == -1 && path2 != -1){
+        tree_holder[path2].push_back(swtch_link.switch1);
+    }else if (path2 == -1 && path1 != -1){
+        tree_holder[path1].push_back(swtch_link.switch2);
+    }else if (path1 == path2){
+        //bad one
+        return false;
+    }else{
+        for (auto n : tree_holder[path2]){
+            tree_holder[path1].push_back(n);
+        }
+        tree_holder.erase(tree_holder.begin() + path2);
+    }
+    return true;
+}
 
+int Network::findPathIndex(std::vector<std::vector<int>> &tree_holder, int node_){
+    for (int i = 0 ; i < tree_holder.size() ; i++){
+        for (auto n : tree_holder[i]){
+            if (node_ == n) return i;
+        }
+    }
+    return -1;
+}
+
+void Network::removeLink(switch_link swtch_link){
+    int fst_switch_number = swtch_link.switch1;
+    int sec_switch_number = swtch_link.switch2;
+
+    string fst_switch_message = "unlink_switch#" + to_string(sec_switch_number);
+    int fst_switch_index = findSwitch(fst_switch_number);
+    int fst_switch_write_fd = this->switch_command_fd_[fst_switch_index];
+
+    if (write(fst_switch_write_fd, fst_switch_message.c_str(), strlen(fst_switch_message.c_str()) + 1) < 0) {
+       cout << "Network: Failed to write to switch " << fst_switch_number << " command file descriptor." << endl;
+    }
+
+    string sec_switch_message = "unlink_switch#" + to_string(fst_switch_number);
+    int sec_switch_index = findSwitch(sec_switch_number);
+    int sec_switch_write_fd = this->switch_command_fd_[sec_switch_index];
+
+    if (write(sec_switch_write_fd, sec_switch_message.c_str(), strlen(sec_switch_message.c_str()) + 1) < 0) {
+       cout << "Network: Failed to write to switch " << sec_switch_number << " command file descriptor." << endl;
+    }
+}
+
+int Network::SpanningTree(std::vector<std::string> &splitted_command){
+    cout<<"=================================="<<endl;
+    cout<<"Running Spanning Tree..."<<endl;
+    cout<<"searching for loops..."<<endl;
+    vector<switch_link> bad_links;
+    if (links.size() < 1){
+        cout<<"there are no switches connected, therefor no loops!"<<endl;
+        return 1;
+    }
+
+    vector<vector<int>> visited_nodes;
+    for (auto x : links){
+        usleep(30000);
+        bool status = checkAddVisited(visited_nodes, x);
+        if (!status){
+            cout<<"found a bad link: <"<<x.switch1<<", "<<x.switch2<<">"<<endl;
+            bad_links.push_back(x);
+        }
+    }
+    
+    if (bad_links.size() > 0){
+        cout<<"removing bad links..."<<endl;
+        for (auto x : bad_links){
+            removeLink(x);
+        }
+    }else{
+        cout<<"did not find any loops, done."<<endl;
+    }
+    return 1;
+}
 
 int Network::run(){
     string input;
@@ -386,6 +473,11 @@ int Network::connectSwitches(std::vector<std::string> &splitted_command) {
     if (write(sec_switch_write_fd, sec_switch_message.c_str(), strlen(sec_switch_message.c_str()) + 1) < 0) {
        cout << "Network: Failed to write to switch " << sec_switch_number << " command file descriptor." << endl;
     }
+
+    switch_link x;
+    x.switch1 = fst_switch_number;
+    x.switch2 = sec_switch_number;
+    links.push_back(x);
 
     return 1;
 }
