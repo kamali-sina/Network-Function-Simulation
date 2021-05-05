@@ -108,18 +108,18 @@ int System::receive() {
     FD_ZERO(&readfds);
 
     if (this->used_port_ > -1) {
-        cout << "System " << system_number_ << ": Receiving ..." << endl;
+        // cout << "System " << system_number_ << ": Receiving ..." << endl;
 
         string link = "link_" + to_string(system_number_) + "_" + to_string(this->connected_switch_) + "_" + to_string(this->used_port_);
 
         std::string link_r = "r_" + link;
         
-        cout << "System " << system_number_ << ": " << link << endl;
+        // cout << "System " << system_number_ << ": " << link << endl;
 
         size_t message_size = 129;
         char message[message_size];
 
-        cout << "System " << system_number_ << ": Trying to open link to read." << endl;
+        // cout << "System " << system_number_ << ": Trying to open link to read." << endl;
         int fd = open(link_r.c_str(), O_RDONLY|O_NONBLOCK);
 
         FD_SET(fd, &readfds);
@@ -128,10 +128,10 @@ int System::receive() {
             
             int read_bytes = read(fd, message, message_size);
 
-            cout << "System " << system_number_ << ": Message from Switch " << this->connected_switch_ << ": " << read_bytes << " bytes." << endl;
+            // cout << "System " << system_number_ << ": Message from Switch " << this->connected_switch_ << ": " << read_bytes << " bytes." << endl;
 
             if (read_bytes > 0) {
-                cout << "System " << system_number_ << ": Message from Switch " << this->connected_switch_ << ": " << message << endl;
+                // cout << "System " << system_number_ << ": Message from Switch " << this->connected_switch_ << ": " << message << endl;
 
                 Frame frame(message);
 
