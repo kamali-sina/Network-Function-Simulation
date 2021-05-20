@@ -103,6 +103,7 @@ void systemProcess(System system_class){
                 int receiver_system_number = stoi(string(message).substr(fst_index + 1, sec_index - fst_index - 1));
                 
                 cout << "System " << system_class.get_number() << ": Requesting receive from system " << receiver_system_number << "." << endl;
+                system_class.send(receiver_system_number);
             }
             memset(message, 0, message_size);
         } else {
