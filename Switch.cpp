@@ -3,8 +3,9 @@
 
 using namespace std;
 
-Switch::Switch(int number_of_ports, int switch_number, int command_fd){
-    number_of_ports_ = number_of_ports;
+Switch::Switch(std::string ip, int switch_number, int command_fd){
+    number_of_ports_ = 20;
+    IP_ = ip;
     switch_number_ = switch_number;
     command_fd_ = command_fd;
 }

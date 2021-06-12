@@ -20,7 +20,7 @@ struct DeviceInfo{
 
 class Switch{
     public:
-    Switch(int number_of_ports, int switch_number, int command_fd);
+    Switch(std::string ip, int switch_number, int command_fd);
     int connect(int system_number, int port_number);
     int get_number(){return switch_number_;}
     int getCommandFd();
@@ -38,10 +38,12 @@ class Switch{
     int broadcastToSwitches(Frame frame);
     int receiveSwitch();
     int unlinkSwitch(int switch_number);
+    std::string getIP(){ return IP_; }
 
     private:
-    unsigned int number_of_ports_;
+    unsigned int number_of_ports_=10;
     unsigned int switch_number_;
+    std::string IP_;
     std::vector<DeviceInfo> lookup_table_;
     int command_fd_;
     std::vector<DeviceInfo> connected_systems_table_;
