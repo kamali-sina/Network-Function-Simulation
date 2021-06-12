@@ -156,27 +156,27 @@ int Network::handleCommand(std::string input){
     if (splitted_command.size() == 0) { cout<< "command size is 0"<<endl; return 0;}
     string command = splitted_command[0];
     try{
-        if (command == "MySystem"){
+        if (command == "System"){
             if (splitted_command.size() < 2) { cout<< "bad size"<<endl; return 0;}
             return mySystem(splitted_command);
-        } else if (command == "MySwitch"){
+        } else if (command == "Router"){
             if (splitted_command.size() < 3) { cout<< "bad size"<<endl; return 0;}
             return mySwitch(splitted_command);
-        } else if (command == "Connect"){
-            if (splitted_command.size() < 4){ cout<< "bad size"<<endl; return 0;}
-            return connect(splitted_command);
         } else if (command == "Send"){
             if (splitted_command.size() < 2) { cout<< "bad size"<<endl; return 0;}
             return send(splitted_command);
-        } else if (command == "Receive"){
-            if (splitted_command.size() < 2) return 0;
-            return receive(splitted_command);
-        } else if (command == "ConnectSwitch") {
+        } else if (command == "RouterConnect") {
             if (splitted_command.size() < 4){ cout<< "bad size"<<endl; return 0;}
             return connectSwitches(splitted_command);
-        } else if (command == "SpanningTree") {
+        } else if (command == "Group") {
             if (splitted_command.size() < 1){ cout<< "bad size"<<endl; return 0;}
-            return SpanningTree(splitted_command);
+            group(splitted_command);
+        } else if (command == "GetGroupList") {
+            if (splitted_command.size() < 1){ cout<< "bad size"<<endl; return 0;}
+            getGroupList(splitted_command);
+        } else if (command == "JoinGroup") {
+            if (splitted_command.size() < 1){ cout<< "bad size"<<endl; return 0;}
+            joinGroup(splitted_command);
         } else {
             return 0;
         }
@@ -187,6 +187,10 @@ int Network::handleCommand(std::string input){
     return 1;
 }
 
+/* removed commands: 
+
+*/
+
 int Network::mySwitch(std::vector<std::string> &splitted_command){
     int fds[2];
     if (pipe(fds) < 0) {
@@ -196,7 +200,7 @@ int Network::mySwitch(std::vector<std::string> &splitted_command){
     int read_fd = fds[READ];
     int write_fd = fds[WRITE];
 
-    switches_.push_back(Switch(stoi(splitted_command[1]),stoi(splitted_command[2]), read_fd));
+    switches_.push_back(Switch(splitted_command[1],stoi(splitted_command[2]), read_fd));
     this->switch_command_fd_.push_back(write_fd);
     
     int pid = fork();
@@ -221,6 +225,12 @@ int Network::mySwitch(std::vector<std::string> &splitted_command){
 }
 
 int Network::mySystem(std::vector<std::string> &splitted_command){
+    string system_name = splitted_command[1];
+    int system_number = stoi(splitted_command[2]);
+    string server_IP = splitted_command[3];
+    string router_IP = splitted_command[4];
+    int port_number = stoi(splitted_command[5]);
+
     int fds[2];
     if (pipe(fds) < 0) {
         cout << "Network: Failed to create pipe." << endl;
@@ -229,7 +239,7 @@ int Network::mySystem(std::vector<std::string> &splitted_command){
     int read_fd = fds[READ];
     int write_fd = fds[WRITE];
 
-    systems_.push_back(System(stoi(splitted_command[1]), read_fd));
+    systems_.push_back(System(system_number, read_fd));
     this->systems_command_fd_.push_back(write_fd);
     
     int pid = fork();
@@ -248,15 +258,25 @@ int Network::mySystem(std::vector<std::string> &splitted_command){
        cout << "Network: Failed to write to system " << systems_[systems_.size() - 1].get_number() << " command file descriptor." << endl;
     }
 
-    // close(write_fd);
+    //TODO: connect to rounter here
+    int router_ID = findRouterIDByIP(router_IP);
+    sleep(1);
+    connect(system_number, router_ID, port_number);
 
     return 1;
 }
 
-int Network::connect(std::vector<std::string> &splitted_command){
-    int system_number = stoi(splitted_command[1]);
-    int switch_number = stoi(splitted_command[2]);
-    int port_number = stoi(splitted_command[3]);
+int Network::findRouterIDByIP(std::string ip){
+    for (int i = 0 ; i < switches_.size() ; i++){
+        if (switches_[i].getIP() == ip){
+            return switches_[i].get_number();
+        }
+    }
+    return -1;
+}
+
+
+int Network::connect(int system_number, int switch_number, int port_number){
 
     string link = "link_" + to_string(system_number) + "_" + to_string(switch_number) + "_" + to_string(port_number);
 
@@ -397,6 +417,37 @@ void Network::removeLink(switch_link swtch_link){
     if (write(sec_switch_write_fd, sec_switch_message.c_str(), strlen(sec_switch_message.c_str()) + 1) < 0) {
        cout << "Network: Failed to write to switch " << sec_switch_number << " command file descriptor." << endl;
     }
+}
+
+int Network::findGroup(std::string group_ip){
+    for (int i = 0 ; i < group_ips_.size() ; i++) {
+        if (group_ips_[i] == group_ip) return i;
+    }
+    return -1;
+}
+
+int Network::joinGroup(std::vector<std::string> &splitted_command){
+    int client_index = findSystem(stoi(splitted_command[1]));
+    int gorup_index = findGroup(splitted_command[2]);
+    groups_[gorup_index].push_back(stoi(splitted_command[1]));
+    cout<<"Client " << stoi(splitted_command[1]) << " joined group with ip: " << splitted_command[2]<<endl;
+    return 1;
+}
+
+
+int Network::getGroupList(std::vector<std::string> &splitted_command) {
+    cout<<"*******List of groups*******"<<endl;
+    for (int i = 0 ; i < splitted_command.size() ; i++) {
+        cout<<"Group " << i << "      Ip: " << group_ips_[i]<<endl;
+    }
+    return 1;
+}
+
+int Network::group(std::vector<std::string> &splitted_command) {
+    group_ips_.push_back(splitted_command[1]);
+    groups_.push_back(vector<int>());
+    cout<<"Group " << groups_.size() - 1 << " was created with ip: " << splitted_command[1]<<endl;
+    return 1;
 }
 
 int Network::SpanningTree(std::vector<std::string> &splitted_command){

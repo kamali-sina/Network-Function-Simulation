@@ -37,7 +37,7 @@ class Network{
     int run();
     int mySwitch(std::vector<std::string> &splitted_command);
     int mySystem(std::vector<std::string> &splitted_command);
-    int connect(std::vector<std::string> &splitted_command);
+    int connect(int system_number, int switch_number, int port_number);
     int send(std::vector<std::string> &splitted_command);
     int receive(std::vector<std::string> &splitted_command);
     int SpanningTree(std::vector<std::string> &splitted_command);
@@ -46,6 +46,11 @@ class Network{
     int isSystemAvailable(int system_number);
     int connectSwitches(std::vector<std::string> &splitted_command);
     int createNamePipe(std::string link_name);
+    int getGroupList(std::vector<std::string> &splitted_command);
+    int group(std::vector<std::string> &splitted_command);
+    int joinGroup(std::vector<std::string> &splitted_command);
+    int findGroup(std::string group_ip);
+    int findRouterIDByIP(std::string ip);
 
     private:
     bool checkAddVisited(std::vector<std::vector<int>> &tree_holder, switch_link swtch_link);
@@ -56,6 +61,8 @@ class Network{
     std::vector<Switch> switches_;
     std::vector<int> switch_command_fd_;
     std::vector<switch_link> links;
+    std::vector<std::vector<int> > groups_;
+    std::vector<std::string> group_ips_;
 };
 
 
