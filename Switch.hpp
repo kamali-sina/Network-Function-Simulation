@@ -12,10 +12,17 @@
 
 #include "Frame.hpp"
 
-struct DeviceInfo{
-    int device_number;
-    int port_number;
-    bool connector = false;
+#define ROUTER 0
+#define SYSTEM 1
+#define SERVER 2
+
+struct DeviceInfo
+{
+    int device_number = -1;
+    int port_number = -1;
+    std::string IP_address_;
+    int type = ROUTER; // Router = 0
+    bool connector;
 };
 
 class Switch{
@@ -24,7 +31,6 @@ class Switch{
     int connect(int system_number, int port_number);
     int get_number(){return switch_number_;}
     int getCommandFd();
-    int updateLookupTable(int system_number, int port_number);
     int receive();
     int addToConnectedTable(int system_number, int index_number);
     int connectSwitch(int switch_number, int port_number);
@@ -38,8 +44,12 @@ class Switch{
     int broadcastToSwitches(Frame frame);
     int receiveSwitch();
     int unlinkSwitch(int switch_number);
-    std::string getIP(){ return IP_; }
-
+    std::string getIP() { return IP_; }
+    bool hasInLookupTable(DeviceInfo device_info);
+    int updateLookupTable(DeviceInfo device_info);
+    void printLookupTable();    
+    std::vector<DeviceInfo> getLookupTable() { return lookup_table_;}
+    int updateLookupTable(std::vector<DeviceInfo> lookup_table, std::string IP);
     private:
     unsigned int number_of_ports_=10;
     unsigned int switch_number_;

@@ -66,21 +66,46 @@ int Switch::getCommandFd() {
     return command_fd_;
 }
 
-int Switch::updateLookupTable(int system_number, int port_number) {
-    for (int system_index = 0; system_index < this->lookup_table_.size(); system_index++) {
-        if (system_number == this->lookup_table_[system_index].device_number) {
-            return 0;
-        }
+bool Switch::hasInLookupTable(DeviceInfo device_info) {
+    for (int i = 0; i < this->lookup_table_.size(); i++) {
+        if (lookup_table_[i].device_number == device_info.device_number && lookup_table_[i].type == device_info.type)
+            return true;
     }
+    
+    return false;
+}
 
-    DeviceInfo system;
-    system.device_number = system_number;
-    system.port_number = port_number;
-
-    this->lookup_table_.push_back(system);
-
+int Switch::updateLookupTable(DeviceInfo device_info) {
+    if (this->hasInLookupTable(device_info)) {
+        return 0;
+    }
+    this->lookup_table_.push_back(device_info);
     return 1;
 }
+
+int Switch::updateLookupTable(std::vector<DeviceInfo> lookup_table, string IP) {
+    for (int i = 0; i < lookup_table.size(); i++) {
+        lookup_table[i].IP_address_ = IP;
+        this->updateLookupTable(lookup_table[i]);
+    }
+    return 0;
+}
+
+void Switch::printLookupTable() {
+    cout << "Router " << this->switch_number_ << " Lookup Table" << endl;
+    cout << "=====================" << endl;
+    for (int i = 0; i < this->lookup_table_.size(); i++) {
+        if (lookup_table_[i].type == ROUTER)
+            cout << "Router " << lookup_table_[i].device_number << " IP: " << lookup_table_[i].IP_address_ << " port: " << lookup_table_[i].port_number << endl;
+        else if (lookup_table_[i].type == SYSTEM)
+            cout << "Client IP: " << lookup_table_[i].IP_address_ << " port: " << lookup_table_[i].port_number << endl;
+        else if (lookup_table_[i].type == SERVER)
+            cout << "Server IP: " << lookup_table_[i].IP_address_ << endl;
+        cout << "---------------------" << endl;
+    }
+    cout<<endl;
+}
+
 
 int Switch::receive() {
     // cout << "Switch " << switch_number_ << ": Receiving ..." << endl;
@@ -115,9 +140,9 @@ int Switch::receive() {
                 Frame frame(message);
                 int receiver_port = this->getPortNumberFromLookupTable(frame.getSenderId());
 
-                if (!(this->isSystemNumberInLookupTable(frame.getSenderId()))) {
-                    this->updateLookupTable(frame.getSenderId(), port_number);
-                }
+                // if (!(this->isSystemNumberInLookupTable(frame.getSenderId()))) {
+                //     this->updateLookupTable(frame.getSenderId(), port_number);
+                // }
 
                 if (this->isSystemNumberInLookupTable(frame.getRecieverId_())) {
                     this->send(frame);
@@ -173,9 +198,9 @@ int Switch::receiveSwitch() {
                 Frame frame(message);
                 int receiver_port = this->getPortNumberFromLookupTable(frame.getSenderId());
 
-                if (!(this->isSystemNumberInLookupTable(frame.getSenderId()))) {
-                    this->updateLookupTable(frame.getSenderId(), port_number);
-                }
+                // if (!(this->isSystemNumberInLookupTable(frame.getSenderId()))) {
+                //     this->updateLookupTable(frame.getSenderId(), port_number);
+                // }
 
                 if (this->isSystemNumberInLookupTable(frame.getRecieverId_())) {
                     this->send(frame);

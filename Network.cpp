@@ -177,6 +177,9 @@ int Network::handleCommand(std::string input){
         } else if (command == "JoinGroup") {
             if (splitted_command.size() < 1){ cout<< "bad size"<<endl; return 0;}
             joinGroup(splitted_command);
+        } else if (command == "PrintLookupTable") {
+            if (splitted_command.size() < 1){ cout<< "bad size"<<endl; return 0;}
+            printLookupTable();
         } else {
             return 0;
         }
@@ -218,6 +221,12 @@ int Network::mySwitch(std::vector<std::string> &splitted_command){
     if (write(write_fd, message.c_str(), strlen(message.c_str()) + 1) < 0) {
        cout << "Network: Faile to write to system " << switches_[switches_.size() - 1].get_number() << " command file descriptor." << endl;
     }
+
+    vector<int> connected_router;
+    connected_routers_.push_back(connected_router);
+
+    vector<int> client_connected;
+    client_connected_routers_.push_back(client_connected);
 
     // close(write_fd);
 
@@ -261,7 +270,13 @@ int Network::mySystem(std::vector<std::string> &splitted_command){
     //TODO: connect to rounter here
     int router_ID = findRouterIDByIP(router_IP);
     sleep(1);
-    connect(system_number, router_ID, port_number);
+
+    DeviceInfo device_info;
+    device_info.device_number = system_number;
+    device_info.IP_address_ = router_IP;
+    device_info.port_number = port_number;
+    device_info.type = SYSTEM;
+    connect(system_number, router_ID, port_number, device_info);
 
     return 1;
 }
@@ -276,7 +291,7 @@ int Network::findRouterIDByIP(std::string ip){
 }
 
 
-int Network::connect(int system_number, int switch_number, int port_number){
+int Network::connect(int system_number, int switch_number, int port_number, DeviceInfo device_info){
 
     string link = "link_" + to_string(system_number) + "_" + to_string(switch_number) + "_" + to_string(port_number);
 
@@ -304,35 +319,42 @@ int Network::connect(int system_number, int switch_number, int port_number){
        cout << "Network: Failed to write to switch " << switch_number << " command file descriptor." << endl;
     }
 
+    for (int i = 0; i < switches_.size(); i++) {
+        if (switches_[i].getIP() == device_info.IP_address_) {
+            client_connected_routers_[i].push_back(device_info.device_number);
+            this->updateLookupTable(i, device_info);
+        }
+    }
+
     return 1;
 }
 
 int Network::send(std::vector<std::string> &splitted_command){
     int system_number = stoi(splitted_command[1]);
-    int receiver_system_number = stoi(splitted_command[2]);
+    string group_IP = splitted_command[2];
     
-    string system_message = "send#" + to_string(receiver_system_number) + "#";
+    // string system_message = "send#" + to_string(receiver_system_number) + "#";
 
-    int system_index = this->isSystemAvailable(system_number);
+    // int system_index = this->isSystemAvailable(system_number);
 
-    int receiver_system_index = this->isSystemAvailable(receiver_system_number);
+    // int receiver_system_index = this->isSystemAvailable(receiver_system_number);
 
-    if ((system_index < 0) || (receiver_system_index < 0)) {
-        return 0;
-    }
+    // if ((system_index < 0) || (receiver_system_index < 0)) {
+    //     return 0;
+    // }
 
-    if (this->systems_[system_index].isConnected()) {
-        int system_write_fd = this->systems_command_fd_[system_index];
+    // if (this->systems_[system_index].isConnected()) {
+    //     int system_write_fd = this->systems_command_fd_[system_index];
 
-        if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
-            cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
-            return 0;
-        }
+    //     if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
+    //         cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
+    //         return 0;
+    //     }
 
-    } else {
-        cout << "Network: System " << system_number << " is not connected." << endl;
-        return 0;
-    }
+    // } else {
+    //     cout << "Network: System " << system_number << " is not connected." << endl;
+    //     return 0;
+    // }
 
     return 1;
 }
@@ -531,6 +553,25 @@ int Network::connectSwitches(std::vector<std::string> &splitted_command) {
     x.switch2 = sec_switch_number;
     links.push_back(x);
 
+    DeviceInfo fst_device_info;
+    fst_device_info.device_number = fst_switch_number;
+    fst_device_info.port_number = port_number;
+    fst_device_info.IP_address_ = switches_[fst_switch_index].getIP();
+
+    DeviceInfo sec_device_info;
+    sec_device_info.device_number = sec_switch_number;
+    sec_device_info.port_number = port_number;
+    sec_device_info.IP_address_ = switches_[sec_switch_index].getIP();
+    
+    connected_routers_[fst_switch_index].push_back(sec_switch_index);
+    connected_routers_[sec_switch_index].push_back(fst_switch_index);
+
+    this->updateLookupTable(fst_switch_index, sec_device_info);
+    this->updateLookupTable(sec_switch_index, fst_device_info);
+
+    switches_[sec_switch_index].updateLookupTable(switches_[fst_switch_index].getLookupTable(), switches_[fst_switch_index].getIP());
+    switches_[fst_switch_index].updateLookupTable(switches_[sec_switch_index].getLookupTable(), switches_[sec_switch_index].getIP());
+
     return 1;
 }
 
@@ -554,4 +595,24 @@ int Network::createNamePipe(std::string link) {
     }
 
     return 0;
+}
+
+int Network::updateLookupTable(int router_index, DeviceInfo device_info) {
+    switches_[router_index].updateLookupTable(device_info);
+    for (int i = 0; i < connected_routers_[router_index].size(); i++) {
+        if (switches_[connected_routers_[router_index][i]].get_number() == device_info.device_number && device_info.type == ROUTER)
+            continue;
+
+        if (!switches_[connected_routers_[router_index][i]].hasInLookupTable(device_info)){
+            device_info.IP_address_ = switches_[router_index].getIP();
+            this->updateLookupTable(this->findSwitch(connected_routers_[router_index][i]), device_info);
+        }
+    }
+    return 1;
+}
+
+void Network::printLookupTable() {
+    for (int i = 0; i < switches_.size(); i++) {
+        switches_[i].printLookupTable();
+    }
 }
