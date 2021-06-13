@@ -205,6 +205,7 @@ int Switch::receiveSwitch() {
                 if (this->isSystemNumberInLookupTable(frame.getRecieverId_())) {
                     this->send(frame);
                 } else {
+                    cout<<"ERROR: mayday mayday... THIS SHOULD NOT HAPPEN!!!"<<endl;
                     this->broadcast(frame);
                 }
 

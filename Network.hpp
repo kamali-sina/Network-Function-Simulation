@@ -38,7 +38,8 @@ class Network{
     int mySwitch(std::vector<std::string> &splitted_command);
     int mySystem(std::vector<std::string> &splitted_command);
     int connect(int system_number, int switch_number, int port_number, DeviceInfo device_info);
-    int send(std::vector<std::string> &splitted_command);
+    int send(int sender_system_number, int receiver_system_number);
+    int sendToGroup(std::vector<std::string> &splitted_command);
     int receive(std::vector<std::string> &splitted_command);
     int SpanningTree(std::vector<std::string> &splitted_command);
     int findSwitch(int switch_number);

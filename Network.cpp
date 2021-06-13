@@ -164,7 +164,7 @@ int Network::handleCommand(std::string input){
             return mySwitch(splitted_command);
         } else if (command == "Send"){
             if (splitted_command.size() < 2) { cout<< "bad size"<<endl; return 0;}
-            return send(splitted_command);
+            return sendToGroup(splitted_command);
         } else if (command == "RouterConnect") {
             if (splitted_command.size() < 4){ cout<< "bad size"<<endl; return 0;}
             return connectSwitches(splitted_command);
@@ -329,32 +329,43 @@ int Network::connect(int system_number, int switch_number, int port_number, Devi
     return 1;
 }
 
-int Network::send(std::vector<std::string> &splitted_command){
-    int system_number = stoi(splitted_command[1]);
+int Network::sendToGroup(std::vector<std::string> &splitted_command){
+    int sender_system_number = stoi(splitted_command[1]);
     string group_IP = splitted_command[2];
+    int group_index = findGroup(group_IP);
+    for (int i = 0 ; i < groups_[group_index].size() ; i ++){
+        if (sender_system_number == groups_[group_index][i]) continue;
+        send(sender_system_number, groups_[group_index][i]);
+        sleep(1);
+    }
+    return 1;
+}
+
+int Network::send(int sender_system_number, int receiver_system_number){
+    int system_number = sender_system_number;
     
-    // string system_message = "send#" + to_string(receiver_system_number) + "#";
+    string system_message = "send#" + to_string(receiver_system_number) + "#";
 
-    // int system_index = this->isSystemAvailable(system_number);
+    int system_index = this->isSystemAvailable(system_number);
 
-    // int receiver_system_index = this->isSystemAvailable(receiver_system_number);
+    int receiver_system_index = this->isSystemAvailable(receiver_system_number);
 
-    // if ((system_index < 0) || (receiver_system_index < 0)) {
-    //     return 0;
-    // }
+    if ((system_index < 0) || (receiver_system_index < 0)) {
+        return 0;
+    }
 
-    // if (this->systems_[system_index].isConnected()) {
-    //     int system_write_fd = this->systems_command_fd_[system_index];
+    if (this->systems_[system_index].isConnected()) {
+        int system_write_fd = this->systems_command_fd_[system_index];
 
-    //     if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
-    //         cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
-    //         return 0;
-    //     }
+        if (write(system_write_fd, system_message.c_str(), strlen(system_message.c_str()) + 1) < 0) {
+            cout << "Network: Failed to write to system " << system_number << " command file descriptor." << endl;
+            return 0;
+        }
 
-    // } else {
-    //     cout << "Network: System " << system_number << " is not connected." << endl;
-    //     return 0;
-    // }
+    } else {
+        cout << "Network: System " << system_number << " is not connected." << endl;
+        return 0;
+    }
 
     return 1;
 }
