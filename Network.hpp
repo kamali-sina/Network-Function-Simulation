@@ -56,6 +56,9 @@ class Network{
     int updateLookupTable(int router_index, DeviceInfo device_info);
     void printLookupTable();
 
+    void sendLookupTable();
+    std::string lookupTableToString(std::vector<DeviceInfo> lookup_table);
+
     private:
     bool checkAddVisited(std::vector<std::vector<int>> &tree_holder, switch_link swtch_link);
     int findPathIndex(std::vector<std::vector<int>> &tree_holder, int node_);

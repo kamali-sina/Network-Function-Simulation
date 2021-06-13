@@ -45,11 +45,13 @@ class Switch{
     int receiveSwitch();
     int unlinkSwitch(int switch_number);
     std::string getIP() { return IP_; }
+    int getPort(DeviceInfo device);
     bool hasInLookupTable(DeviceInfo device_info);
     int updateLookupTable(DeviceInfo device_info);
+    std::vector<DeviceInfo> stringToLookupTable(std::string lookup_table);
     void printLookupTable();    
     std::vector<DeviceInfo> getLookupTable() { return lookup_table_;}
-    int updateLookupTable(std::vector<DeviceInfo> lookup_table, std::string IP);
+    int updateLookupTable(std::vector<DeviceInfo> lookup_table, std::string IP, int port);
     private:
     unsigned int number_of_ports_=10;
     unsigned int switch_number_;

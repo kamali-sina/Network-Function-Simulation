@@ -83,9 +83,10 @@ int Switch::updateLookupTable(DeviceInfo device_info) {
     return 1;
 }
 
-int Switch::updateLookupTable(std::vector<DeviceInfo> lookup_table, string IP) {
+int Switch::updateLookupTable(std::vector<DeviceInfo> lookup_table, string IP, int port) {
     for (int i = 0; i < lookup_table.size(); i++) {
         lookup_table[i].IP_address_ = IP;
+        lookup_table[i].port_number = port;
         this->updateLookupTable(lookup_table[i]);
     }
     return 0;
@@ -98,7 +99,7 @@ void Switch::printLookupTable() {
         if (lookup_table_[i].type == ROUTER)
             cout << "Router " << lookup_table_[i].device_number << " IP: " << lookup_table_[i].IP_address_ << " port: " << lookup_table_[i].port_number << endl;
         else if (lookup_table_[i].type == SYSTEM)
-            cout << "Client IP: " << lookup_table_[i].IP_address_ << " port: " << lookup_table_[i].port_number << endl;
+            cout << "Client ID: " << lookup_table_[i].device_number << " IP: " << lookup_table_[i].IP_address_ << " port: " << lookup_table_[i].port_number << endl;
         else if (lookup_table_[i].type == SERVER)
             cout << "Server IP: " << lookup_table_[i].IP_address_ << endl;
         cout << "---------------------" << endl;
@@ -206,7 +207,9 @@ int Switch::receiveSwitch() {
                     this->send(frame);
                 } else {
                     cout<<"ERROR: mayday mayday... THIS SHOULD NOT HAPPEN!!!"<<endl;
-                    this->broadcast(frame);
+                    cout << frame.getRecieverId_() << endl;
+                    this->printLookupTable();
+                    //this->broadcast(frame);
                 }
 
                 memset(message, 0, message_size);
@@ -503,4 +506,21 @@ int Switch::broadcastToSwitches(Frame frame) {
     }
 
     return 1;
+}
+
+int Switch::getPort(DeviceInfo device) {
+    for (int i = 0; i < lookup_table_.size(); i++) {
+        if (device.device_number == lookup_table_[i].device_number)
+            return lookup_table_[i].port_number;
+    }
+    return -1;
+}
+
+vector<DeviceInfo> Switch::stringToLookupTable(string lookup_table) {
+    //Format "ID IP PORT TYPE@ID IP PORT TYPE@..."
+
+    int index = string(lookup_table).find('@',  + 1);
+    cout << "crop: " << lookup_table.substr(0, index) << endl;
+    vector<DeviceInfo> devices;
+    return devices;
 }
