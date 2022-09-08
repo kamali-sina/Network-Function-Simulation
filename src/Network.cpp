@@ -156,10 +156,10 @@ int Network::handleCommand(std::string input){
     if (splitted_command.size() == 0) { cout<< "command size is 0"<<endl; return 0;}
     string command = splitted_command[0];
     try{
-        if (command == "MySystem"){
+        if (command == "System"){
             if (splitted_command.size() < 2) { cout<< "bad size"<<endl; return 0;}
             return mySystem(splitted_command);
-        } else if (command == "MySwitch"){
+        } else if (command == "Switch"){
             if (splitted_command.size() < 3) { cout<< "bad size"<<endl; return 0;}
             return mySwitch(splitted_command);
         } else if (command == "Connect"){
