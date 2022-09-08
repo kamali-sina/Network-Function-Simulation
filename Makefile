@@ -1,24 +1,30 @@
 CC := g++ -std=c++17 -pthread
+BUILD_DIR=build
+SRC_DIR=src
 
-all : Network
+all : mk Network
 
 Network : main.o Network.o Switch.o System.o Frame.o
-		$(CC) main.o Network.o Switch.o System.o Frame.o -o Network
+		$(CC) ${BUILD_DIR}/main.o ${BUILD_DIR}/Network.o ${BUILD_DIR}/Switch.o ${BUILD_DIR}/System.o ${BUILD_DIR}/Frame.o -o Network
 
-main.o : main.cpp Network.hpp
-	$(CC) -c main.cpp
+main.o : ${SRC_DIR}/main.cpp ${SRC_DIR}/Network.hpp
+	$(CC) -c ${SRC_DIR}/main.cpp -o ${BUILD_DIR}/main.o
 
-Network.o : Network.cpp Network.hpp
-	$(CC) -c Network.cpp
+Network.o : ${SRC_DIR}/Network.cpp ${SRC_DIR}/Network.hpp
+	$(CC) -c ${SRC_DIR}/Network.cpp -o ${BUILD_DIR}/Network.o
 
-Switch.o : Switch.cpp Switch.hpp
-	$(CC) -c Switch.cpp
+Switch.o : ${SRC_DIR}/Switch.cpp ${SRC_DIR}/Switch.hpp
+	$(CC) -c ${SRC_DIR}/Switch.cpp -o ${BUILD_DIR}/Switch.o
 
-System.o : System.cpp System.hpp
-	$(CC) -c System.cpp
+System.o : ${SRC_DIR}/System.cpp ${SRC_DIR}/System.hpp
+	$(CC) -c ${SRC_DIR}/System.cpp -o ${BUILD_DIR}/System.o
 
-Frame.o : Frame.cpp Frame.hpp
-	$(CC) -c Frame.cpp
+Frame.o : ${SRC_DIR}/Frame.cpp ${SRC_DIR}/Frame.hpp
+	$(CC) -c ${SRC_DIR}/Frame.cpp -o ${BUILD_DIR}/Frame.o 
+
+mk:
+	mkdir ./${BUILD_DIR}
 
 clean:
-	rm *.o Network r_link_* w_link_*
+	rm -rf ${BUILD_DIR}
+	rm Network
