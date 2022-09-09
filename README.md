@@ -24,6 +24,6 @@ You can define differant components in the simulation by using a vide variaty of
 * ConnectSwitch: Connect two switches to each other.
 * Send: Sends packet from a system.
 * Recieve: Commands a system to recieve incoming packages.
-* SpanningTree: Runs the spanning tree algorithm on the network to eliminate redundant paths.
+* SpanningTree: Runs the spanning tree algorithm on the network to eliminate redundant cycles.
 
 Feel free to email me if you have any questions.
