@@ -9,6 +9,12 @@ It uses multi-threading to run different components in parallel and uses IPC to 
 
 To build the code, run:
 
+```
+make
+```
+
+## User Guide
+
 ![Network](./img/Network.png)
 
 There are two main classes, Switch and System. Each instance of switch and system will run on a different process.
@@ -18,7 +24,7 @@ There are two main classes, Switch and System. Each instance of switch and syste
 This command creates a switch with the number of ports given by you. Another parameter is the switch number to which you are assigning. A switch also forms an internal address lookup table that is initially empty.
 
 ```
-MySwitch <number_of_ports> <switch_number>
+Switch <number_of_ports> <switch_number>
 ```
 
 ## System
@@ -26,7 +32,7 @@ MySwitch <number_of_ports> <switch_number>
 This command creates a computer system with the system number given by you.
 
 ```
-MySystem <system_number>
+System <system_number>
 ```
 
 ## Connection
