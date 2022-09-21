@@ -13,6 +13,12 @@ To build the code, run:
 make
 ```
 
+To run the program, run:
+
+```
+./Network
+```
+
 ## User Guide
 
 ![Network](./img/Network.png)
