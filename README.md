@@ -1,6 +1,13 @@
 # Network-Function-Simulation
 
-This project is a simple implementation and simulation of a network function.
+
+A network function simulation project coded on cpp. It features a series of simulated network components including switches, systems, frame decoders, and etc.
+
+It uses multi-threading to run different components in parallel and uses IPC to pass messages between them.
+
+## Running The Project
+
+To build the code, run:
 
 ![Network](./img/Network.png)
 
